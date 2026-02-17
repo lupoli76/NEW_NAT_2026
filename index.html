@@ -4862,7 +4862,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
           <span class="small" id="visible-count"></span>
         </div>
         <div class="links-header" style="margin-bottom:4px;">
-          <input type="text" id="filter" placeholder="Filtra per Id / Centrale / CLLI ..." />
+          <input type="text" id="filter" placeholder="Filtra per Id / Centrale / CLLI ... (es: CRM001+CRM002 o con virgola)" />
           <button id="btn-filter-clear" title="Pulisci filtro collegamenti">X</button>
           <button id="btn-all" title="Seleziona tutto (tutti i collegamenti)">Tutto</button>
           <button id="btn-none" title="Azzera la selezione dei collegamenti">Azzera</button>
@@ -4894,7 +4894,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
   <!-- Inizio Footer di Progetto -->
 <div class="project-info" style="font-size: 0.85em; text-align: center; color: #555555;">
     <div>
-        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.11 • 12/02/2026]
+        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.12 • 17/02/2026]
     </div>
 
     <div style="margin-top: 3px;">
@@ -31351,17 +31351,32 @@ function linkMatchesFilter(link, text) {
     const raw = text.trim();
     if (!raw) return true;
 
-    // 1. Modalità "blocco" (ricerca per ID multipli)
-    if (raw.includes(',') || raw.includes(';')) {
+    // 1. Modalità "blocco" (ricerca per ID multipli con ,  ;  o  +)
+    if (raw.includes(',') || raw.includes(';') || raw.includes('+')) {
         const ids = raw
-            .split(/[;,]+/)
-            .map(s => s.trim().toLowerCase())
+            .split(/[;,+]+/)
+            .map(s => {
+                // Normalizza ogni ID: lowercase + spazi uniformi intorno ai pipe
+                return s.trim().toLowerCase()
+                    .replace(/\s*\|\s*/g, ' | ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            })
             .filter(Boolean);
 
         if (!ids.length) return true;
 
-        // In modalità blocco filtriamo SOLO per Id collegamento
-        return ids.includes(String(link.id).toLowerCase());
+        // ✅ FIX MERGED: cerca sia in link.id che in link._originalId
+        const linkIdNorm = String(link.id || '').toLowerCase()
+            .replace(/\s*\|\s*/g, ' | ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        const linkOriginalIdNorm = String(link._originalId || '').toLowerCase()
+            .replace(/\s*\|\s*/g, ' | ')
+            .replace(/\s+/g, ' ')
+            .trim();
+            
+        return ids.includes(linkIdNorm) || ids.includes(linkOriginalIdNorm);
     }
 
     // 2. Modalità standard (ricerca FULL-TEXT case-insensitive)
@@ -31372,6 +31387,7 @@ function linkMatchesFilter(link, text) {
     // Costruzione di un BLOB di testo che include tutti i campi ricercabili:
     const blob = [
         link.id,
+        link._originalId, // ✅ FIX MERGED: Aggiungi ID originale per ricerca
         link.from, // CLLI A
         link.to,   // CLLI Z
         link.fromName, // Nome Centrale A (camelCase)
@@ -31716,8 +31732,9 @@ function parseBlockIds(text, max = 10) {
   const raw = text.trim();
   if (!raw) return [];
 
+  // Supporta separatori: virgola (,), punto e virgola (;), più (+)
   let parts = raw
-    .split(/[;,]+/)
+    .split(/[;,+]+/)
     .map(s => s.trim())
     .filter(Boolean);
 
@@ -31731,7 +31748,13 @@ function parseBlockIds(text, max = 10) {
     parts = parts.slice(0, max);
   }
 
-  return parts.map(s => s.toLowerCase());
+  // Normalizza: lowercase E normalizza spazi intorno ai pipe (| → " | ")
+  return parts.map(s => {
+    return s.toLowerCase()
+      .replace(/\s*\|\s*/g, ' | ')  // Normalizza spazi intorno ai pipe
+      .replace(/\s+/g, ' ')          // Rimuovi spazi multipli
+      .trim();
+  });
 }
 
 
@@ -31751,21 +31774,34 @@ function parseBlockIds(text, max = 10) {
       buildLinksList();
       updateTotals();
 
-// filtro collegamenti (supporta blocchi tipo "CRM001, CRM002, CRM003")
+// Helper per normalizzare gli ID (gestisce spazi intorno ai pipe)
+function normalizeId(id) {
+  if (!id) return '';
+  return String(id).toLowerCase()
+    .replace(/\s*\|\s*/g, ' | ')  // Normalizza spazi intorno ai pipe
+    .replace(/\s+/g, ' ')          // Rimuovi spazi multipli
+    .trim();
+}
+
+// filtro collegamenti (supporta blocchi tipo "CRM001, CRM002, CRM003" o "CRM001+CRM002+CRM003")
 document.getElementById('filter').addEventListener('input', (e) => {
   const text = (e.target.value || '').trim();
 
-  // Modalità blocco se presenti virgole o ;
-  if (text.includes(',') || text.includes(';')) {
+  // Modalità blocco se presenti virgole, ; o +
+  if (text.includes(',') || text.includes(';') || text.includes('+')) {
     const ids = parseBlockIds(text, 10); // limite massimo 10 Id
     // Azzero la selezione corrente
     selectedIds = new Set();
 
     if (ids.length) {
       const idSet = new Set(ids);
-      // Seleziono solo i collegamenti trovati
+      // Seleziono solo i collegamenti trovati (con normalizzazione ID)
+      // ✅ FIX MERGED: cerca sia in link.id che in link._originalId
       LINKS.forEach(link => {
-        if (idSet.has(String(link.id).toLowerCase())) {
+        const linkIdNorm = normalizeId(link.id);
+        const linkOriginalIdNorm = normalizeId(link._originalId);
+        
+        if (idSet.has(linkIdNorm) || idSet.has(linkOriginalIdNorm)) {
           selectedIds.add(link.id);
         }
       });
@@ -217978,7 +218014,15 @@ const roadRoute = L.polyline(coords, {
       <p><strong>NAT (National Topography) Italia</strong> è uno strumento professionale di visualizzazione, analisi e gestione delle reti nazionali italiane di telecomunicazioni DWDM. Progettato per ingegneri, tecnici e manager che operano nell'ambito delle infrastrutture di rete backbone (RC) e access (RA).</p>
 
       <div class="guide-highlight">
-        <p><strong>🆕 NOVITÀ VERSIONE Rev22.11 (15/01/2026):</strong><br/>
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.12 (17/02/2026):</strong><br/>
+        ✅ <strong>🔗 Selezione Multipla Collegamenti:</strong> Ora puoi selezionare più collegamenti contemporaneamente<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Separatori supportati: virgola (,), punto e virgola (;), più (+)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Esempi: <code>CRM004+CRM005</code> oppure <code>CRM004, CRM005</code><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Supporta anche ID complessi RA: <code>MILO_arco_1037 | MILO_190 | ALO016 | 1+MILO_arco_1037 | MILO_201 | ALO016 | 2</code><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• ✅ Funziona con tutti i database: RC, RA e MERGED (RA+RC)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Limite massimo: 10 collegamenti per volta<br/><br/>
+        
+        <strong>VERSIONE Rev22.11 (15/01/2026):</strong><br/>
         ✅ <strong>📖 Guida Utente Aggiornata:</strong> Documentazione completa e strutturata<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Sezione Design Tokens con lista completa variabili CSS<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Tab "✨ Animazioni" con tutti gli effetti disponibili<br/>
