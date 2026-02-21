@@ -2897,6 +2897,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
       gap: 4px;
       padding: 2px 0;
       border-bottom: 1px solid #f3f4f6;
+      position: relative;
     }
     .list-item:last-child {
       border-bottom: none;
@@ -4418,6 +4419,151 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
     opacity: 0;
   }
 }
+    /* ══ ROUTING PANEL ══════════════════════════════════════════════════ */
+    #routing-panel-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 99000;
+      background: rgba(0,0,0,0.40);
+      align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    #routing-panel-backdrop.show { display: flex; pointer-events: auto; }
+    #routing-panel-backdrop.rp-floating {
+      background: transparent !important;
+      pointer-events: none !important;
+    }
+    #routing-panel {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.28);
+      width: min(900px, 96vw); max-height: 85vh;
+      display: flex; flex-direction: column; overflow: hidden; font-size: 13px;
+      pointer-events: auto;
+      min-width: 440px; min-height: 300px; resize: both;
+    }
+    #routing-panel.rp-floating {
+      position: fixed;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.38), 0 0 0 2px #e6a817;
+      resize: both;
+    }
+    #routing-panel-header {
+      background: #0c3b6e; color: #fff; padding: 10px 14px;
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+      user-select: none;
+    }
+    #rp-drag-handle {
+      display: none; flex-shrink: 0; opacity: 0.6;
+      font-size: 14px; cursor: grab; padding: 0 4px;
+    }
+    #rp-drag-handle:active { cursor: grabbing; }
+    #routing-panel.rp-floating #rp-drag-handle { display: block; }
+    #routing-panel.rp-floating #routing-panel-header { cursor: grab; }
+    #routing-panel.rp-floating #routing-panel-header:active { cursor: grabbing; }
+    #routing-panel-header h3 {
+      margin: 0; font-size: 13px; font-weight: 700; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .rp-lock-btn {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+      color: #fff; border-radius: 6px; padding: 3px 9px; cursor: pointer;
+      font-size: 11px; font-weight: 600; flex-shrink: 0; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .rp-lock-btn:hover { background: rgba(255,255,255,0.28); }
+    .rp-lock-btn.floating { background: rgba(230,168,23,0.3); border-color: rgba(230,168,23,0.6); }
+    #routing-panel-header .rp-close-btn {
+      background: rgba(255,255,255,0.15); border: none; color: #fff;
+      border-radius: 6px; padding: 4px 10px; cursor: pointer;
+      font-size: 15px; font-weight: bold; flex-shrink: 0;
+    }
+    #routing-panel-header .rp-close-btn:hover { background: rgba(255,255,255,0.3); }
+    #routing-panel-subheader {
+      background: #e6f0fa; border-bottom: 1px solid #ccd9ea;
+      padding: 6px 14px; font-size: 12px; color: #0c3b6e; flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    #routing-panel-subheader .rp-link-id {
+      font-weight: 700; font-family: monospace; font-size: 11px;
+      background: #fff; border: 1px solid #b3cce6; border-radius: 4px;
+      padding: 2px 7px; color: #0c3b6e;
+    }
+    #routing-panel-subheader .rp-sel-info {
+      margin-left: auto; font-weight: 600; color: #004C99; font-size: 12px;
+    }
+    /* DB badge nel subheader */
+    .rp-db-badge {
+      display: inline-block; border-radius: 4px; padding: 1px 7px;
+      font-size: 11px; font-weight: 700; border: 1px solid;
+    }
+    .rp-db-badge.rc   { background: #fff0f0; color: #8a0101; border-color: #f5b5b5; }
+    .rp-db-badge.ra   { background: #f0f7ff; color: #004C99; border-color: #b3cce6; }
+    .rp-db-badge.merged { background: #f5f0ff; color: #6a00b5; border-color: #d4b5f5; }
+    #routing-panel-body {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+      overflow: hidden; flex: 1; min-height: 0;
+    }
+    .rp-col { display: flex; flex-direction: column; border-right: 1px solid #e5e7eb; overflow: hidden; }
+    .rp-col:last-child { border-right: none; }
+    .rp-col-header {
+      padding: 7px 12px; font-weight: 700; font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .rp-col-header.side-a { background: #f0f7ff; color: #004C99; border-bottom: 2px solid #004C99; }
+    .rp-col-header.side-z { background: #f0fff4; color: #1a6e38; border-bottom: 2px solid #1a6e38; }
+    .rp-col-search { padding: 5px 8px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; }
+    .rp-col-search input {
+      width: 100%; box-sizing: border-box; border: 1px solid #d1d5db;
+      border-radius: 5px; padding: 4px 7px; font-size: 11px; outline: none;
+    }
+    .rp-col-search input:focus { border-color: #004C99; }
+    .rp-list { overflow-y: auto; flex: 1; padding: 3px 0; }
+    .rp-item {
+      display: flex; align-items: flex-start; gap: 7px; padding: 5px 12px;
+      cursor: pointer; border-bottom: 1px solid #f3f4f6; transition: background 0.1s;
+    }
+    .rp-item:hover { background: #f9fafb; }
+    .rp-item.rp-selected { background: #e6f0ff; border-left: 3px solid #004C99; padding-left: 9px; }
+    .rp-item.rp-rc-source { border-left: 3px solid #8a0101; }
+    .rp-item.rp-ra-source { border-left: 3px solid #004C99; }
+    .rp-item.rp-selected.rp-rc-source { background: #fff0f0; border-left: 3px solid #8a0101; }
+    .rp-item.rp-selected.rp-ra-source { background: #e6f0ff; border-left: 3px solid #004C99; }
+    .rp-item input[type=checkbox] { margin-top: 2px; flex-shrink: 0; cursor: pointer; accent-color: #004C99; }
+    .rp-item-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .rp-item-id { font-weight: 600; color: #0c3b6e; font-size: 11px; font-family: monospace; word-break: break-all; }
+    .rp-item-nodes { color: #0066CC; font-size: 11px; }
+    .rp-item-meta { color: #6b7280; font-size: 10px; }
+    .rp-item-source { font-size: 10px; font-weight: 700; }
+    .rp-item-source.rc { color: #8a0101; }
+    .rp-item-source.ra { color: #004C99; }
+    .rp-item.rp-selected .rp-item-id::after { content: ' ✓'; color: #2f8700; }
+    .rp-empty { padding: 18px 12px; color: #9ca3af; font-size: 12px; text-align: center; }
+    #routing-panel-footer {
+      padding: 8px 14px; background: #f9fafb; border-top: 1px solid #e5e7eb;
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap;
+    }
+    .rp-footer-btn { border: none; border-radius: 6px; padding: 5px 13px; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .rp-footer-btn.primary   { background: #004C99; color: #fff; }
+    .rp-footer-btn.primary:hover   { background: #003a78; }
+    .rp-footer-btn.secondary { background: #e5e7eb; color: #374151; }
+    .rp-footer-btn.secondary:hover { background: #d1d5db; }
+    .rp-footer-btn.danger    { background: #fee2e2; color: #b91c1c; }
+    .rp-footer-btn.danger:hover    { background: #fecaca; }
+    .rp-snap-btns { display: none; gap: 4px; }
+    .rp-snap-btns.visible { display: flex; }
+    .rp-snap-btn {
+      background: #fff; border: 1px solid #b3cce6; color: #004C99;
+      border-radius: 5px; padding: 3px 7px; cursor: pointer; font-size: 11px;
+      font-weight: 600; white-space: nowrap;
+    }
+    .rp-snap-btn:hover { background: #e6f0fa; }
+    .btn-routing {
+      position: absolute; top: 3px; right: 4px;
+      background: #e6f0fa; border: 1px solid #b3cce6;
+      color: #004C99; border-radius: 5px; padding: 2px 6px; font-size: 11px;
+      cursor: pointer; font-weight: 600; white-space: nowrap;
+      transition: background 0.15s; line-height: 1.4; z-index: 1;
+    }
+    .btn-routing:hover { background: #cde0f5; }
+
 </style>
 
 <!-- ══════════════════════════════════════════════════════════════════════════════
@@ -32608,6 +32754,7 @@ window.LINKS = [
 
 // --- Codice originale ---
 const nodesById = new Map(NODES.map(n => [n.id, n]));
+window.nodesById = nodesById; // esposto per routing panel
 // Di default NESSUN collegamento è selezionato
 let selectedIds = new Set();
 window.selectedIds = selectedIds;
@@ -35247,6 +35394,18 @@ if (useDbRaFormat) {
         label.style.cursor = 'pointer';
         label.style.flex = '1';
 
+// Bottone 🔀 Routing
+const routingBtn = document.createElement('button');
+routingBtn.className = 'btn-routing';
+routingBtn.title = 'Suggerimento routing: collegamento adiacente in CLLI A e CLLI Z';
+routingBtn.textContent = '🔀';
+routingBtn.addEventListener('click', function(e) {
+  e.stopPropagation();
+  if (typeof window.showRoutingPanel === 'function') {
+    window.showRoutingPanel(link.id);
+  }
+});
+
 // Click su tutto il div (non solo label) per selezionare
 div.style.cursor = 'pointer';
 div.addEventListener('click', function() {
@@ -35264,6 +35423,7 @@ div.addEventListener('click', function() {
 
         div.appendChild(checkbox);
         div.appendChild(label);
+        div.appendChild(routingBtn);
         container.appendChild(div);
       });
 
@@ -35310,6 +35470,7 @@ div.addEventListener('click', function() {
       drawLinks();
       updateNodeStyles();
     }
+    window.toggleLink = toggleLink; // esposto per routing panel
 
     function syncCheckboxes() {
       document.querySelectorAll('#links-list input[type="checkbox"]').forEach(cb => {
@@ -227076,6 +227237,472 @@ window.addZoomToSelectionControl = function(map) {
   }, 5000);
 })();
 
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     ROUTING PANEL – Suggerimento percorsi da CLLI A/Z (NAT Italia)
+     Supporta DB1 (RC), DB2 (RA) e MERGED (RC+RA)
+     ══════════════════════════════════════════════════════════════════ -->
+<div id="routing-panel-backdrop">
+  <div id="routing-panel">
+    <div id="routing-panel-header">
+      <span id="rp-drag-handle" title="Trascina per spostare">⠿⠿</span>
+      <h3 id="rp-title">🔀 Suggerimento Routing</h3>
+      <span id="rp-db-badge-header"></span>
+      <button class="rp-lock-btn" id="rp-lock-btn" onclick="rpToggleFloat()" title="Sblocca pannello – diventa mobile e trascinabile">🔓 Sblocca</button>
+      <button class="rp-close-btn" onclick="closeRoutingPanel()" title="Chiudi">✕</button>
+    </div>
+    <div id="routing-panel-subheader">
+      <span>Collegamento:</span>
+      <span class="rp-link-id" id="rp-link-id-display">—</span>
+      <span id="rp-nodes-display" style="color:#555;"></span>
+      <span class="rp-sel-info" id="rp-sel-info">0 selezionati</span>
+    </div>
+    <div id="routing-panel-body">
+      <div class="rp-col">
+        <div class="rp-col-header side-a">
+          <span>🔵</span>
+          <span id="rp-col-a-title">Lato CLLI A</span>
+          <span id="rp-col-a-count" style="margin-left:auto;font-weight:400;color:#555;"></span>
+        </div>
+        <div class="rp-col-search">
+          <input type="text" id="rp-search-a" placeholder="Filtra…" oninput="rpFilterList('a')" />
+        </div>
+        <div class="rp-list" id="rp-list-a"></div>
+      </div>
+      <div class="rp-col">
+        <div class="rp-col-header side-z">
+          <span>🟢</span>
+          <span id="rp-col-z-title">Lato CLLI Z</span>
+          <span id="rp-col-z-count" style="margin-left:auto;font-weight:400;color:#555;"></span>
+        </div>
+        <div class="rp-col-search">
+          <input type="text" id="rp-search-z" placeholder="Filtra…" oninput="rpFilterList('z')" />
+        </div>
+        <div class="rp-list" id="rp-list-z"></div>
+      </div>
+    </div>
+    <div id="routing-panel-footer">
+      <button class="rp-footer-btn primary" onclick="rpSelectAllVisible()" title="Seleziona tutti i collegamenti visibili nelle due liste">☑ Seleziona tutti visibili</button>
+      <button class="rp-footer-btn danger" onclick="rpDeselectAll()" title="Deseleziona tutti i collegamenti aperti in questo pannello">✕ Deseleziona tutti</button>
+      <div class="rp-snap-btns" id="rp-snap-btns">
+        <button class="rp-snap-btn" onclick="rpSnap('tl')" title="Angolo in alto a sinistra">↖</button>
+        <button class="rp-snap-btn" onclick="rpSnap('tr')" title="Angolo in alto a destra">↗</button>
+        <button class="rp-snap-btn" onclick="rpSnap('bl')" title="Angolo in basso a sinistra">↙</button>
+        <button class="rp-snap-btn" onclick="rpSnap('br')" title="Angolo in basso a destra">↘</button>
+        <button class="rp-snap-btn" onclick="rpSnap('center')" title="Centro schermo">⊙</button>
+      </div>
+      <button class="rp-footer-btn secondary" onclick="closeRoutingPanel()" style="margin-left:auto;">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// ROUTING PANEL – NAT Italia (DB1/RC, DB2/RA, MERGED)
+// draggable, lockable, scroll-blocking
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+
+  let _rpCurrentLink  = null;
+  let _rpLinksA       = [];
+  let _rpLinksZ       = [];
+  let _rpIsFloating   = false;
+  let _drag = { active: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 };
+
+  // ── Helper ────────────────────────────────────────────────────────
+  function _sel()  { return window.selectedIds || new Set(); }
+  function _links(){ return window.LINKS || []; }
+  function _nodesById() { return window.nodesById || new Map(); }
+
+  function _currentDB() {
+    return (window.DB_STATE && window.DB_STATE.currentDB) || 'DB1';
+  }
+
+  // In MERGED, cerca i link adiacenti sia in db1_links che db2_links
+  // per preservare i _source originali prima che vengano wrappati con id tecnico
+  function _getAdjacentLinks(clliEndpoint, excludeLinkId) {
+    const db = _currentDB();
+
+    // In modalità MERGED: cerca nei db originali (non nel merged con id tecnici)
+    // perché vogliamo mostrare i link con i loro ID originali e source
+    if (db === 'MERGED' && window.DB_STATE) {
+      const candidates = [];
+
+      const db1 = window.DB_STATE.db1_links || [];
+      db1.forEach(l => {
+        const f = l.from_id || l.from;
+        const t = l.to_id   || l.to;
+        if ((f === clliEndpoint || t === clliEndpoint) && l.id !== excludeLinkId && l._originalId !== excludeLinkId) {
+          candidates.push({ ...l, _rpSource: 'DB1' });
+        }
+      });
+
+      const db2 = window.DB_STATE.db2_links || [];
+      db2.forEach(l => {
+        const f = l.from_id || l.from;
+        const t = l.to_id   || l.to;
+        if ((f === clliEndpoint || t === clliEndpoint) && l.id !== excludeLinkId && l._originalId !== excludeLinkId) {
+          candidates.push({ ...l, _rpSource: 'DB2' });
+        }
+      });
+
+      return candidates;
+    }
+
+    // DB1 o DB2: usa LINKS corrente
+    return _links().filter(l => {
+      const f = l.from_id || l.from;
+      const t = l.to_id   || l.to;
+      return (f === clliEndpoint || t === clliEndpoint) &&
+             l.id !== excludeLinkId;
+    }).map(l => ({
+      ...l,
+      _rpSource: db === 'DB2' ? 'DB2' : 'DB1'
+    }));
+  }
+
+  function _resolveDisplayId(link) {
+    return link._originalId || link.id || 'N/D';
+  }
+
+  function _resolveNodeName(clli) {
+    const nb = _nodesById();
+    let n = nb.get(clli);
+    if (!n && window.DB_STATE) {
+      // prova nei db nativi
+      const allNodes = [
+        ...(window.DB_STATE.db1_nodes || []),
+        ...(window.DB_STATE.db2_nodes || [])
+      ];
+      n = allNodes.find(x => (x.clli || x.id) === clli);
+    }
+    return (n && (n.name || n.GAT || n.CENTRALE)) || clli || '?';
+  }
+
+  function _syncUI() {
+    if (typeof window.buildLinksList === 'function') {
+      const fi = document.getElementById('filter');
+      window.buildLinksList(fi ? fi.value || '' : '');
+    }
+    if (typeof window.drawLinks === 'function') window.drawLinks();
+    if (typeof window.updateNodeStyles === 'function') window.updateNodeStyles();
+    if (typeof window.updateTotals === 'function') window.updateTotals();
+  }
+
+  function _esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function _statoColor(stato) {
+    const s = (stato || '').toUpperCase();
+    if (s === 'ATTIVO')          return '#2f8700';
+    if (s === 'CESSATO')         return '#b91c1c';
+    if (s === 'IN_RISERVA' || s === 'RISERVA') return '#d97706';
+    if (s === 'NON_ATTIVO')      return '#d32f2f';
+    if (s === 'IN_ATTIVAZIONE')  return '#f9a825';
+    return '#6b7280';
+  }
+
+  function _buildItem(link, side) {
+    const sel        = _sel();
+    // In MERGED il link ha id tecnico (DB1_L…); la selezione usa quell'id
+    const selId      = link.id;
+    const isSelected = sel.has(selId);
+    const displayId  = _resolveDisplayId(link);
+    const fromClli   = link.from_id || link.from;
+    const toClli     = link.to_id   || link.to;
+    const fromName   = _resolveNodeName(fromClli);
+    const toName     = _resolveNodeName(toClli);
+    const stato      = link.stato || 'N/D';
+    const km         = link.distance_km != null ? String(link.distance_km).replace('.', ',') + ' km' : 'N/D';
+    const src        = link._rpSource || link._source || '';
+    const srcLabel   = src === 'DB1' ? 'RC' : src === 'DB2' ? 'RA' : '';
+    const srcClass   = src === 'DB1' ? 'rc' : src === 'DB2' ? 'ra' : '';
+
+    const db         = _currentDB();
+    const showSource = db === 'MERGED' && srcLabel;
+
+    const div = document.createElement('div');
+    div.className = 'rp-item'
+      + (isSelected ? ' rp-selected' : '')
+      + (db === 'MERGED' && src === 'DB1' ? ' rp-rc-source' : '')
+      + (db === 'MERGED' && src === 'DB2' ? ' rp-ra-source' : '');
+    div.dataset.id   = selId;
+    div.dataset.side = side;
+
+    const cb   = document.createElement('input');
+    cb.type    = 'checkbox';
+    cb.checked = isSelected;
+
+    const txt     = document.createElement('div');
+    txt.className = 'rp-item-text';
+    txt.innerHTML =
+      (showSource ? '<span class="rp-item-source ' + srcClass + '">[' + srcLabel + '] </span>' : '') +
+      '<span class="rp-item-id">' + _esc(displayId) + '</span>' +
+      '<span class="rp-item-nodes">' + _esc(fromName) + ' → ' + _esc(toName) + '</span>' +
+      '<span class="rp-item-meta"><strong>' + _esc(fromClli) + '</strong> → <strong>' + _esc(toClli) + '</strong>' +
+      ' &nbsp;•&nbsp; <span style="color:' + _statoColor(stato) + ';font-weight:600;">' + _esc(stato) + '</span>' +
+      ' &nbsp;•&nbsp; ' + _esc(km) + '</span>';
+
+    div.appendChild(cb);
+    div.appendChild(txt);
+
+    function toggle() {
+      // Legge lo stato prima del toggle dalla classe CSS
+      const itemEl = document.querySelector('#routing-panel .rp-item[data-id="' + CSS.escape(selId) + '"]');
+      const wasSel = itemEl ? itemEl.classList.contains('rp-selected') : false;
+      if (typeof window.toggleLink === 'function') {
+        window.toggleLink(selId);
+      } else {
+        const s = _sel();
+        if (s.has(selId)) { s.delete(selId); } else { s.add(selId); }
+      }
+      const nowSel = !wasSel;
+      document.querySelectorAll('#routing-panel .rp-item[data-id="' + CSS.escape(selId) + '"]').forEach(el => {
+        el.classList.toggle('rp-selected', nowSel);
+        el.querySelector('input[type=checkbox]').checked = nowSel;
+      });
+      _rpUpdateSelInfo();
+    }
+    div.addEventListener('click', toggle);
+    cb.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+    return div;
+  }
+
+  function _rpUpdateSelInfo() {
+    const allIds = new Set([..._rpLinksA, ..._rpLinksZ].map(l => l.id));
+    const s = _sel();
+    let count = 0;
+    allIds.forEach(id => { if (s.has(id)) count++; });
+    const el = document.getElementById('rp-sel-info');
+    if (el) el.textContent = count + ' selezionat' + (count === 1 ? 'o' : 'i') + ' in questo pannello';
+  }
+
+  function _renderList(containerId, links, filterText) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    const f       = (filterText || '').toLowerCase().trim();
+    const visible = f ? links.filter(l => {
+      const blob = [
+        _resolveDisplayId(l), l.from, l.to,
+        _resolveNodeName(l.from_id || l.from),
+        _resolveNodeName(l.to_id   || l.to),
+        l.stato || '', l._rpSource || ''
+      ].join(' ').toLowerCase();
+      return blob.includes(f);
+    }) : links;
+
+    if (!visible.length) {
+      const empty = document.createElement('div');
+      empty.className   = 'rp-empty';
+      empty.textContent = f ? 'Nessun risultato per "' + filterText + '"' : 'Nessun collegamento adiacente.';
+      container.appendChild(empty);
+    } else {
+      const side = containerId === 'rp-list-a' ? 'a' : 'z';
+      visible.forEach(link => container.appendChild(_buildItem(link, side)));
+    }
+    const countId = containerId === 'rp-list-a' ? 'rp-col-a-count' : 'rp-col-z-count';
+    const countEl = document.getElementById(countId);
+    if (countEl) countEl.textContent = '(' + visible.length + '/' + links.length + ')';
+  }
+
+  // ── Floating / lock ─────────────────────────────────────────────
+  function _applyFloatingMode(floating) {
+    _rpIsFloating = floating;
+    const backdrop = document.getElementById('routing-panel-backdrop');
+    const panel    = document.getElementById('routing-panel');
+    const lockBtn  = document.getElementById('rp-lock-btn');
+    const snapBtns = document.getElementById('rp-snap-btns');
+    if (floating) {
+      backdrop.classList.add('rp-floating');
+      panel.classList.add('rp-floating');
+      if (lockBtn)  { lockBtn.textContent = '🔒 Ancora'; lockBtn.classList.add('floating'); }
+      if (snapBtns) snapBtns.classList.add('visible');
+      if (!panel.style.left) rpSnap('center');
+      _initDrag();
+    } else {
+      backdrop.classList.remove('rp-floating');
+      panel.classList.remove('rp-floating');
+      panel.style.left = ''; panel.style.top = '';
+      if (lockBtn)  { lockBtn.textContent = '🔓 Sblocca'; lockBtn.classList.remove('floating'); }
+      if (snapBtns) snapBtns.classList.remove('visible');
+      _destroyDrag();
+    }
+  }
+
+  window.rpToggleFloat = function() { _applyFloatingMode(!_rpIsFloating); };
+
+  window.rpSnap = function(pos) {
+    const panel = document.getElementById('routing-panel');
+    if (!panel) return;
+    const pw = panel.offsetWidth || 900, ph = panel.offsetHeight || 480;
+    const vw = window.innerWidth,      vh = window.innerHeight;
+    const G  = 12;
+    let left, top;
+    switch(pos) {
+      case 'tl': left = G;          top = G; break;
+      case 'tr': left = vw-pw-G;    top = G; break;
+      case 'bl': left = G;          top = vh-ph-G; break;
+      case 'br': left = vw-pw-G;    top = vh-ph-G; break;
+      default:   left = (vw-pw)/2;  top = (vh-ph)/2; break;
+    }
+    panel.style.left = Math.max(0, left) + 'px';
+    panel.style.top  = Math.max(0, top)  + 'px';
+  };
+
+  // ── Drag ────────────────────────────────────────────────────────
+  function _initDrag() {
+    const header = document.getElementById('routing-panel-header');
+    if (header) header.addEventListener('mousedown', _onDragStart);
+  }
+  function _destroyDrag() {
+    const header = document.getElementById('routing-panel-header');
+    if (header) header.removeEventListener('mousedown', _onDragStart);
+  }
+  function _onDragStart(e) {
+    if (e.target.closest('button')) return;
+    const panel = document.getElementById('routing-panel');
+    if (!panel || !_rpIsFloating) return;
+    e.preventDefault();
+    _drag.active    = true;
+    _drag.startX    = e.clientX; _drag.startY    = e.clientY;
+    _drag.startLeft = panel.offsetLeft; _drag.startTop = panel.offsetTop;
+    document.addEventListener('mousemove', _onDragMove, { passive: false });
+    document.addEventListener('mouseup',   _onDragEnd);
+  }
+  function _onDragMove(e) {
+    if (!_drag.active) return;
+    const panel = document.getElementById('routing-panel');
+    if (!panel) return;
+    const dx = e.clientX - _drag.startX, dy = e.clientY - _drag.startY;
+    panel.style.left = Math.max(0, Math.min(window.innerWidth  - panel.offsetWidth,  _drag.startLeft + dx)) + 'px';
+    panel.style.top  = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, _drag.startTop  + dy)) + 'px';
+  }
+  function _onDragEnd() {
+    _drag.active = false;
+    document.removeEventListener('mousemove', _onDragMove);
+    document.removeEventListener('mouseup',   _onDragEnd);
+  }
+
+  // ── Scroll block ────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function() {
+    const panel = document.getElementById('routing-panel');
+    if (!panel) return;
+    panel.addEventListener('wheel',      function(e) { e.stopPropagation(); }, { passive: false, capture: true });
+    panel.addEventListener('touchmove',  function(e) { e.stopPropagation(); }, { passive: false, capture: true });
+  });
+
+  // ── API pubblica ─────────────────────────────────────────────────
+  window.showRoutingPanel = function(linkId) {
+    const db   = _currentDB();
+    // Trova il link nell'array LINKS corrente
+    const link = _links().find(l => l.id === linkId);
+    if (!link) return;
+    _rpCurrentLink = link;
+
+    const clliA = link.from_id || link.from;
+    const clliZ = link.to_id   || link.to;
+
+    _rpLinksA = _getAdjacentLinks(clliA, linkId);
+    _rpLinksZ = _getAdjacentLinks(clliZ, linkId);
+    _rpLinksA.sort((a,b) => _resolveDisplayId(a).localeCompare(_resolveDisplayId(b)));
+    _rpLinksZ.sort((a,b) => _resolveDisplayId(a).localeCompare(_resolveDisplayId(b)));
+
+    const nameA = _resolveNodeName(clliA);
+    const nameZ = _resolveNodeName(clliZ);
+    const displayId = _resolveDisplayId(link);
+
+    // Badge DB nel header
+    const badge = document.getElementById('rp-db-badge-header');
+    if (badge) {
+      if (db === 'MERGED') badge.innerHTML = '<span class="rp-db-badge merged">RC + RA</span>';
+      else if (db === 'DB1') badge.innerHTML = '<span class="rp-db-badge rc">RC</span>';
+      else if (db === 'DB2') badge.innerHTML = '<span class="rp-db-badge ra">RA</span>';
+      else badge.innerHTML = '';
+    }
+
+    document.getElementById('rp-link-id-display').textContent = displayId;
+    document.getElementById('rp-nodes-display').textContent   = nameA + ' ⟶ ' + nameZ;
+    document.getElementById('rp-col-a-title').textContent     = 'Lato ' + clliA;
+    document.getElementById('rp-col-z-title').textContent     = 'Lato ' + clliZ;
+
+    const sa = document.getElementById('rp-search-a');
+    const sz = document.getElementById('rp-search-z');
+    if (sa) sa.value = '';
+    if (sz) sz.value = '';
+
+    _renderList('rp-list-a', _rpLinksA, '');
+    _renderList('rp-list-z', _rpLinksZ, '');
+    _rpUpdateSelInfo();
+
+    document.getElementById('routing-panel-backdrop').classList.add('show');
+    _applyFloatingMode(_rpIsFloating);
+  };
+
+  window.closeRoutingPanel = function() {
+    document.getElementById('routing-panel-backdrop').classList.remove('show');
+    _rpCurrentLink = null;
+  };
+
+  window.rpFilterList = function(side) {
+    const input = document.getElementById('rp-search-' + side);
+    const f     = input ? input.value : '';
+    _renderList(side === 'a' ? 'rp-list-a' : 'rp-list-z',
+                side === 'a' ? _rpLinksA  : _rpLinksZ, f);
+    _rpUpdateSelInfo();
+  };
+
+  window.rpSelectAllVisible = function() {
+    document.querySelectorAll('#routing-panel .rp-item').forEach(el => {
+      const id = el.dataset.id;
+      if (typeof window.toggleLink === 'function') {
+        if (!_sel().has(id)) window.toggleLink(id);
+      } else {
+        _sel().add(id);
+      }
+      el.classList.add('rp-selected');
+      const cb = el.querySelector('input[type=checkbox]');
+      if (cb) cb.checked = true;
+    });
+    _rpUpdateSelInfo(); _syncUI();
+  };
+
+  window.rpDeselectAll = function() {
+    const allIds = new Set([..._rpLinksA, ..._rpLinksZ].map(l => l.id));
+    allIds.forEach(id => {
+      if (typeof window.toggleLink === 'function') {
+        if (_sel().has(id)) window.toggleLink(id);
+      } else {
+        _sel().delete(id);
+      }
+    });
+    document.querySelectorAll('#routing-panel .rp-item').forEach(el => {
+      el.classList.remove('rp-selected');
+      const cb = el.querySelector('input[type=checkbox]');
+      if (cb) cb.checked = false;
+    });
+    _rpUpdateSelInfo(); _syncUI();
+  };
+
+  // Chiudi cliccando sul backdrop (solo modalità ancorata)
+  document.addEventListener('click', function(e) {
+    if (_rpIsFloating) return;
+    const backdrop = document.getElementById('routing-panel-backdrop');
+    if (backdrop && e.target === backdrop) window.closeRoutingPanel();
+  });
+
+  // Chiudi con Esc
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const backdrop = document.getElementById('routing-panel-backdrop');
+      if (backdrop && backdrop.classList.contains('show')) window.closeRoutingPanel();
+    }
+  });
+
+})();
 </script>
 
 </body>
