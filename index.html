@@ -4434,10 +4434,10 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
     #routing-panel {
       background: #fff; border-radius: 12px;
       box-shadow: 0 8px 40px rgba(0,0,0,0.28);
-      width: min(900px, 96vw); max-height: 85vh;
+      width: min(1350px, 96vw); max-height: 42vh;
       display: flex; flex-direction: column; overflow: hidden; font-size: 13px;
       pointer-events: auto;
-      min-width: 440px; min-height: 300px; resize: both;
+      min-width: 600px; min-height: 150px; resize: both;
     }
     #routing-panel.rp-floating {
       position: fixed;
@@ -4469,12 +4469,18 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
     }
     .rp-lock-btn:hover { background: rgba(255,255,255,0.28); }
     .rp-lock-btn.floating { background: rgba(230,168,23,0.3); border-color: rgba(230,168,23,0.6); }
-    #routing-panel-header .rp-close-btn {
+    #routing-panel-header .rp-close-btn,
+    .rp-minimize-btn {
       background: rgba(255,255,255,0.15); border: none; color: #fff;
       border-radius: 6px; padding: 4px 10px; cursor: pointer;
       font-size: 15px; font-weight: bold; flex-shrink: 0;
     }
-    #routing-panel-header .rp-close-btn:hover { background: rgba(255,255,255,0.3); }
+    #routing-panel-header .rp-close-btn:hover,
+    .rp-minimize-btn:hover { background: rgba(255,255,255,0.3); }
+    #routing-panel.rp-minimized #routing-panel-subheader,
+    #routing-panel.rp-minimized #routing-panel-body,
+    #routing-panel.rp-minimized #routing-panel-footer { display: none; }
+    #routing-panel.rp-minimized { min-height: 0 !important; resize: none; }
     #routing-panel-subheader {
       background: #e6f0fa; border-bottom: 1px solid #ccd9ea;
       padding: 6px 14px; font-size: 12px; color: #0c3b6e; flex-shrink: 0;
@@ -4529,7 +4535,8 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
     .rp-item input[type=checkbox] { margin-top: 2px; flex-shrink: 0; cursor: pointer; accent-color: #004C99; }
     .rp-item-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
     .rp-item-id { font-weight: 600; color: #0c3b6e; font-size: 11px; font-family: monospace; word-break: break-all; }
-    .rp-item-nodes { color: #0066CC; font-size: 11px; }
+    .rp-item-nodes { color: #0066CC; font-size: 11px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .rp-item-arco-badge { flex-shrink: 0; font-size: 9.5px; font-weight: 700; color: #0000cc; background: #eef; border: 1px solid #b3b3ee; border-radius: 3px; padding: 0 5px; white-space: nowrap; }
     .rp-item-meta { color: #6b7280; font-size: 10px; }
     .rp-item-source { font-size: 10px; font-weight: 700; }
     .rp-item-source.rc { color: #8a0101; }
@@ -4554,6 +4561,38 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
       border-radius: 5px; padding: 3px 7px; cursor: pointer; font-size: 11px;
       font-weight: 600; white-space: nowrap;
     }
+
+    /* ── Routing Panel: strip extras (Tipo1 / A1 / DC) – inline ─────── */
+    .rp-extras-strip {
+      margin-top: 3px; border-radius: 5px; overflow: hidden;
+      border: 1px solid #e5e7eb; font-size: 10.5px; line-height: 1.5;
+    }
+    .rp-ext-row {
+      display: flex; align-items: center; flex-wrap: nowrap;
+      gap: 5px; padding: 2px 8px; white-space: nowrap; overflow: hidden;
+    }
+    .rp-ext-row.tipo1-row { background: #fff8ec; border-bottom: 1px solid #fde8a0; }
+    .rp-ext-row.a1dc-row  { background: #f4f0ff; }
+
+    .rp-ext-label {
+      flex-shrink: 0; font-weight: 700; font-size: 9.5px;
+      border-radius: 3px; padding: 0 4px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .rp-ext-label.tipo1 { color: #92400e; background: #fde68a; }
+    .rp-ext-label.a1    { color: #5b21b6; background: #ede9fe; }
+    .rp-ext-label.dc    { color: #9d174d; background: #fce7f3; }
+    .rp-ext-sep { color: #cbd5e1; margin: 0 2px; }
+
+    .rp-ext-val        { font-weight: 600; }
+    .rp-ext-val.tipo1  { color: #92400e; }
+    .rp-ext-val.a1     { color: #5b21b6; }
+    .rp-ext-val.dc     { color: #9d174d; }
+    .rp-ext-clli { color: #6b7280; font-size: 9px; }
+    .rp-ext-dist { color: #059669; font-size: 9px; font-weight: 600; }
+    .rp-ext-arco { color: #6b7280; font-size: 9px; }
+    .rp-ext-none { color: #9ca3af; font-style: italic; }
+
     .rp-snap-btn:hover { background: #e6f0fa; }
     .btn-routing {
       position: absolute; top: 3px; right: 4px;
@@ -5040,7 +5079,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
   <!-- Inizio Footer di Progetto -->
 <div class="project-info" style="font-size: 0.85em; text-align: center; color: #555555;">
     <div>
-        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.12 • 17/02/2026]
+        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.13 • 23/02/2026]
     </div>
 
     <div style="margin-top: 3px;">
@@ -35466,11 +35505,13 @@ div.addEventListener('click', function() {
       } else {
         selectedIds.add(id);
       }
+      window.selectedIds = selectedIds; // mantieni sincronizzato
       updateTotals();
       drawLinks();
       updateNodeStyles();
     }
     window.toggleLink = toggleLink; // esposto per routing panel
+    window.isLinkSelected = function(id) { return selectedIds.has(id); };
 
     function syncCheckboxes() {
       document.querySelectorAll('#links-list input[type="checkbox"]').forEach(cb => {
@@ -37502,6 +37543,8 @@ function switchDatabase(dbType) {
     // Reset selezioni
     selectedIds = new Set();
     selectedNodeIds = new Set();
+    window.selectedIds = selectedIds; // re-sincronizza dopo reset DB
+    window.isLinkSelected = function(id) { return selectedIds.has(id); };
     
     // Ricostruisci nodesById
     nodesById.clear();
@@ -221766,7 +221809,22 @@ const roadRoute = L.polyline(coords, {
       <p><strong>NAT (National Topography) Italia</strong> è uno strumento professionale di visualizzazione, analisi e gestione delle reti nazionali italiane di telecomunicazioni DWDM. Progettato per ingegneri, tecnici e manager che operano nell'ambito delle infrastrutture di rete backbone (RC) e access (RA).</p>
 
       <div class="guide-highlight">
-        <p><strong>🆕 NOVITÀ VERSIONE Rev22.12 (17/02/2026):</strong><br/>
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.13 (23/02/2026):</strong><br/>
+        ✅ <strong>🔀 Pannello Routing Suggerito (RA + RC):</strong> Nuova finestra contestuale di supporto al routing per ogni collegamento<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Bottone 🔀 su ogni riga della tabella "🔗 Collegamenti" apre il pannello<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Visualizza i collegamenti adiacenti lato CLLI A e lato CLLI Z del collegamento selezionato<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>DB RA:</strong> filtra per stesso Arco e TipoSede corrispondente dell'endpoint — suggerimenti precisi per livello di rete<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>DB RC:</strong> mostra tutti i collegamenti adiacenti al CLLI<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>DB MERGED:</strong> combina entrambi con badge [RC] / [RA] per ogni collegamento suggerito<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Per ogni suggerimento <strong>RA</strong>: indicazione T1 direzionale sull'Arco (verso quale Tipo 1 si va nella direzione del routing)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Per ogni suggerimento <strong>RC e RA</strong>: Nodo A1 più vicino + Data Center più vicino al far-endpoint<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Badge Arco allineato a destra sulla riga nomi per i link RA<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Selezione/deselezione nel pannello sincronizzata con la tabella "🔗 Collegamenti" e la mappa<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Pannello trascinabile/bloccabile (🔓 Sblocca / 🔒 Ancora) con snap agli angoli e centro<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Bottone 🗕 Riduci / 🗖 Ripristina per compattare il pannello<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Scroll interno non propaga alla mappa sottostante<br/><br/>
+
+        <strong>VERSIONE Rev22.12 (17/02/2026):</strong><br/>
         ✅ <strong>🔗 Selezione Multipla Collegamenti:</strong> Ora puoi selezionare più collegamenti contemporaneamente<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Separatori supportati: virgola (,), punto e virgola (;), più (+)<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Esempi: <code>CRM004+CRM005</code> oppure <code>CRM004, CRM005</code><br/>
@@ -227250,6 +227308,7 @@ window.addZoomToSelectionControl = function(map) {
       <h3 id="rp-title">🔀 Suggerimento Routing</h3>
       <span id="rp-db-badge-header"></span>
       <button class="rp-lock-btn" id="rp-lock-btn" onclick="rpToggleFloat()" title="Sblocca pannello – diventa mobile e trascinabile">🔓 Sblocca</button>
+      <button class="rp-minimize-btn" id="rp-minimize-btn" onclick="rpToggleMinimize()" title="Riduci pannello">🗕</button>
       <button class="rp-close-btn" onclick="closeRoutingPanel()" title="Chiudi">✕</button>
     </div>
     <div id="routing-panel-subheader">
@@ -227301,85 +227360,195 @@ window.addZoomToSelectionControl = function(map) {
 // ══════════════════════════════════════════════════════════════════════
 // ROUTING PANEL – NAT Italia (DB1/RC, DB2/RA, MERGED)
 // draggable, lockable, scroll-blocking
+// Con info: Tipo1 su Arco (RA), Nodo A1, DC (ambedue i DB)
 // ══════════════════════════════════════════════════════════════════════
 (function() {
 
-  let _rpCurrentLink  = null;
-  let _rpLinksA       = [];
-  let _rpLinksZ       = [];
-  let _rpIsFloating   = false;
+  let _rpCurrentLink = null;
+  let _rpLinksA      = [];
+  let _rpLinksZ      = [];
+  let _rpClliA       = null;   // CLLI lato A del link selezionato
+  let _rpClliZ       = null;   // CLLI lato Z del link selezionato
+  let _rpIsFloating  = false;
   let _drag = { active: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 };
 
-  // ── Helper ────────────────────────────────────────────────────────
-  function _sel()  { return window.selectedIds || new Set(); }
-  function _links(){ return window.LINKS || []; }
-  function _nodesById() { return window.nodesById || new Map(); }
+  // ── Accessori ────────────────────────────────────────────────────────
+  function _sel()      { return window.selectedIds || new Set(); }
+  function _links()    { return window.LINKS || []; }
+  function _nodesById(){ return window.nodesById || new Map(); }
+  function _currentDB(){ return (window.DB_STATE && window.DB_STATE.currentDB) || 'DB1'; }
 
-  function _currentDB() {
-    return (window.DB_STATE && window.DB_STATE.currentDB) || 'DB1';
+  // Legge lo stato di selezione dal selectedIds interno (tramite buildLinksList rebuild)
+  // Dopo window.toggleLink il selectedIds interno è aggiornato; lo verifichiamo
+  // controllando se il link compare tra i selected in LINKS.
+  function _isSelected(id) {
+    return !!(window.LINKS && window.LINKS.some && window.selectedLinks && window.selectedLinks.has
+      ? window.selectedLinks.has(id)
+      : (window.selectedIds && window.selectedIds.has && window.selectedIds.has(id)));
   }
 
-  // In MERGED, cerca i link adiacenti sia in db1_links che db2_links
-  // per preservare i _source originali prima che vengano wrappati con id tecnico
-  function _getAdjacentLinks(clliEndpoint, excludeLinkId) {
-    const db = _currentDB();
-
-    // In modalità MERGED: cerca nei db originali (non nel merged con id tecnici)
-    // perché vogliamo mostrare i link con i loro ID originali e source
-    if (db === 'MERGED' && window.DB_STATE) {
-      const candidates = [];
-
-      const db1 = window.DB_STATE.db1_links || [];
-      db1.forEach(l => {
-        const f = l.from_id || l.from;
-        const t = l.to_id   || l.to;
-        if ((f === clliEndpoint || t === clliEndpoint) && l.id !== excludeLinkId && l._originalId !== excludeLinkId) {
-          candidates.push({ ...l, _rpSource: 'DB1' });
-        }
-      });
-
-      const db2 = window.DB_STATE.db2_links || [];
-      db2.forEach(l => {
-        const f = l.from_id || l.from;
-        const t = l.to_id   || l.to;
-        if ((f === clliEndpoint || t === clliEndpoint) && l.id !== excludeLinkId && l._originalId !== excludeLinkId) {
-          candidates.push({ ...l, _rpSource: 'DB2' });
-        }
-      });
-
-      return candidates;
+  // ── Risoluzione nodo da CLLI (cerca in tutti i DB) ───────────────────
+  function _nodeFromClli(clli) {
+    if (!clli) return null;
+    const nb = _nodesById();
+    let n = nb.get(clli);
+    if (n) return n;
+    // cerca per id o clli in tutti i db
+    const pools = [
+      window.DB_STATE && window.DB_STATE.db1_nodes || [],
+      window.DB_STATE && window.DB_STATE.db2_nodes || []
+    ];
+    for (const pool of pools) {
+      n = pool.find(x => (x.clli === clli || x.id === clli));
+      if (n) return n;
     }
-
-    // DB1 o DB2: usa LINKS corrente
-    return _links().filter(l => {
-      const f = l.from_id || l.from;
-      const t = l.to_id   || l.to;
-      return (f === clliEndpoint || t === clliEndpoint) &&
-             l.id !== excludeLinkId;
-    }).map(l => ({
-      ...l,
-      _rpSource: db === 'DB2' ? 'DB2' : 'DB1'
-    }));
-  }
-
-  function _resolveDisplayId(link) {
-    return link._originalId || link.id || 'N/D';
+    return null;
   }
 
   function _resolveNodeName(clli) {
-    const nb = _nodesById();
-    let n = nb.get(clli);
-    if (!n && window.DB_STATE) {
-      // prova nei db nativi
-      const allNodes = [
-        ...(window.DB_STATE.db1_nodes || []),
-        ...(window.DB_STATE.db2_nodes || [])
-      ];
-      n = allNodes.find(x => (x.clli || x.id) === clli);
-    }
+    const n = _nodeFromClli(clli);
     return (n && (n.name || n.GAT || n.CENTRALE)) || clli || '?';
   }
 
+  function _resolveDisplayId(link) { return link._originalId || link.id || 'N/D'; }
+
+  // ── Link adiacenti ───────────────────────────────────────────────────
+  // Per link RA: filtra per stesso Arco + TipoSede corrispondente dell'endpoint.
+  // Per link RC: qualsiasi link adiacente al CLLI.
+  // selectedLink  = il link selezionato (per leggere Arco, Prog, TipoSedeA/Z)
+  // side          = 'A' | 'Z'  (quale endpoint stiamo esplorando)
+  function _getAdjacentLinks(clliEndpoint, excludeLinkId, selectedLink, side) {
+    const db     = _currentDB();
+    const selSrc = selectedLink
+      ? (selectedLink._rpSource || selectedLink._source || (db === 'DB2' ? 'DB2' : 'DB1'))
+      : (db === 'DB2' ? 'DB2' : 'DB1');
+    const isRA   = selSrc === 'DB2';
+
+    if (isRA && selectedLink && selectedLink.Arco) {
+      const selArco     = selectedLink.Arco;
+      // TipoSede dell'endpoint condiviso nel link selezionato
+      const selTipoSede = side === 'A'
+        ? (selectedLink.TipoSedeA != null ? String(selectedLink.TipoSedeA) : null)
+        : (selectedLink.TipoSedeZ != null ? String(selectedLink.TipoSedeZ) : null);
+
+      return _links().filter(l => {
+        if (l.id === excludeLinkId || l._originalId === excludeLinkId) return false;
+        // stesso Arco
+        const lArco = l.Arco || (l._source === 'DB2' ? l.Arco : null);
+        if (!lArco || lArco !== selArco) return false;
+        // tocca l'endpoint
+        const f = l.from_id || l.from, t = l.to_id || l.to;
+        if (f !== clliEndpoint && t !== clliEndpoint) return false;
+        // TipoSede dell'endpoint condiviso nel candidato deve corrispondere
+        if (selTipoSede != null) {
+          const candidateTipo = (f === clliEndpoint)
+            ? (l.TipoSedeA != null ? String(l.TipoSedeA) : null)
+            : (l.TipoSedeZ != null ? String(l.TipoSedeZ) : null);
+          if (candidateTipo != null && candidateTipo !== selTipoSede) return false;
+        }
+        return true;
+      }).map(l => ({ ...l, _rpSource: l._source || 'DB2' }));
+    }
+
+    // RC o link senza Arco: qualsiasi link che tocca l'endpoint
+    return _links().filter(l => {
+      const f = l.from_id || l.from, t = l.to_id || l.to;
+      return (f === clliEndpoint || t === clliEndpoint) &&
+             l.id !== excludeLinkId && l._originalId !== excludeLinkId;
+    }).map(l => ({
+      ...l,
+      _rpSource: l._source || (db === 'DB2' ? 'DB2' : 'DB1')
+    }));
+  }
+
+  // ── Calcolo "extras" per ogni link suggerito ─────────────────────────
+  // sharedClli = CLLI condiviso con il link selezionato (il punto di aggancio)
+  function _computeExtras(link, sharedClli) {
+    const extras = { tipo1: null, a1: null, dc: null };
+
+    // Identifica il far endpoint (l'altro capo rispetto al nodo condiviso)
+    const fromClli = link.from_id || link.from;
+    const toClli   = link.to_id   || link.to;
+    const farClli  = (fromClli === sharedClli) ? toClli : fromClli;
+    const farNode  = _nodeFromClli(farClli);
+
+    const src  = link._rpSource || link._source || '';
+    const isRA = (src === 'DB2');
+
+    // 1. Tipo 1 direzionale sull'Arco (solo RA)
+    if (isRA && link.Arco) {
+      const arco          = link.Arco;
+      const suggestedProg = link.Prog_Ramo_Arco || 0;
+      // goingForward = from del link suggerito è il nodo condiviso
+      // → stiamo andando verso Prog crescente (verso farClli=to)
+      const goingForward  = (fromClli === sharedClli);
+
+      const raLinks  = (window.DB_STATE && window.DB_STATE.db2_links) || _links();
+      const arcLinks = raLinks.filter(l => l.Arco === arco);
+
+      // Raccoglie T1 con la loro posizione (Prog del link in cui compaiono)
+      const t1Map = new Map(); // clli → { clli, name, prog }
+      arcLinks.forEach(l => {
+        const lProg = l.Prog_Ramo_Arco || 0;
+        const fC    = l.from_id || l.from;
+        const tC    = l.to_id   || l.to;
+        if ((l.TipoSedeA == 1 || l.TipoSedeA === '1') && fC) {
+          if (!t1Map.has(fC)) t1Map.set(fC, { clli: fC, name: _resolveNodeName(fC), prog: lProg });
+        }
+        if ((l.TipoSedeZ == 1 || l.TipoSedeZ === '1') && tC) {
+          if (!t1Map.has(tC)) t1Map.set(tC, { clli: tC, name: _resolveNodeName(tC), prog: lProg });
+        }
+      });
+
+      const t1List = Array.from(t1Map.values());
+
+      // Filtra: solo T1 oltre il link suggerito nella direzione di marcia
+      // goingForward → Prog > suggestedProg (estremo alto dell'arco)
+      // goingBackward → Prog < suggestedProg (estremo basso dell'arco)
+      let directional;
+      if (goingForward) {
+        directional = t1List.filter(t => t.prog > suggestedProg);
+        if (directional.length)
+          extras.tipo1 = directional.reduce((b, t) => t.prog > b.prog ? t : b);
+      } else {
+        directional = t1List.filter(t => t.prog < suggestedProg);
+        if (directional.length)
+          extras.tipo1 = directional.reduce((b, t) => t.prog < b.prog ? t : b);
+      }
+
+      // Fallback: se il far endpoint stesso è T1
+      if (!extras.tipo1) {
+        const farT1 = t1List.find(t => t.clli === farClli);
+        if (farT1) extras.tipo1 = farT1;
+      }
+    }
+
+    // 2. Nodo A1 più vicino al far endpoint
+    if (farNode && farNode.lat && farNode.lon) {
+      const a1List = window.NODI_A1 || [];
+      let bestA1 = null, minD = Infinity;
+      a1List.forEach(a1 => {
+        if (!a1.lat || !a1.lon) return;
+        const d = haversineDistance(farNode.lat, farNode.lon, a1.lat, a1.lon);
+        if (d < minD) { minD = d; bestA1 = { ...a1, dist: d }; }
+      });
+      extras.a1 = bestA1;
+
+      // 3. DC più vicino al far endpoint
+      const dcList = window.DATA_CENTER_LIST || [];
+      let bestDC = null, minDD = Infinity;
+      dcList.forEach(dc => {
+        if (!dc.lat || !dc.lon) return;
+        const d = haversineDistance(farNode.lat, farNode.lon, dc.lat, dc.lon);
+        if (d < minDD) { minDD = d; bestDC = { ...dc, dist: d }; }
+      });
+      extras.dc = bestDC;
+    }
+
+    return extras;
+  }
+
+  // ── Stato e sync ─────────────────────────────────────────────────────
   function _syncUI() {
     if (typeof window.buildLinksList === 'function') {
       const fi = document.getElementById('filter');
@@ -227390,24 +227559,31 @@ window.addZoomToSelectionControl = function(map) {
     if (typeof window.updateTotals === 'function') window.updateTotals();
   }
 
-  function _esc(s) {
-    if (s == null) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
   function _statoColor(stato) {
     const s = (stato || '').toUpperCase();
     if (s === 'ATTIVO')          return '#2f8700';
-    if (s === 'CESSATO')         return '#b91c1c';
-    if (s === 'IN_RISERVA' || s === 'RISERVA') return '#d97706';
     if (s === 'NON_ATTIVO')      return '#d32f2f';
     if (s === 'IN_ATTIVAZIONE')  return '#f9a825';
+    if (s === 'IN_VARIAZIONE')   return '#ff6f00';
+    if (s === 'IN_REINSTRADAMENTO') return '#1976d2';
+    if (s === 'CESSATO' || s === 'RISERVA') return '#b91c1c';
     return '#6b7280';
   }
 
-  function _buildItem(link, side) {
+  function _esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function _fmtDist(km) {
+    if (km == null || isNaN(km)) return '';
+    return km < 1 ? (km * 1000).toFixed(0) + ' m' : km.toFixed(1) + ' km';
+  }
+
+  // ── Costruisce un item della lista ────────────────────────────────────
+  function _buildItem(link, side, sharedClli) {
     const sel        = _sel();
-    // In MERGED il link ha id tecnico (DB1_L…); la selezione usa quell'id
     const selId      = link.id;
     const isSelected = sel.has(selId);
     const displayId  = _resolveDisplayId(link);
@@ -227416,13 +227592,15 @@ window.addZoomToSelectionControl = function(map) {
     const fromName   = _resolveNodeName(fromClli);
     const toName     = _resolveNodeName(toClli);
     const stato      = link.stato || 'N/D';
-    const km         = link.distance_km != null ? String(link.distance_km).replace('.', ',') + ' km' : 'N/D';
+    const km         = link.distance_km != null ? String(link.distance_km).replace('.',',') + ' km' : 'N/D';
     const src        = link._rpSource || link._source || '';
     const srcLabel   = src === 'DB1' ? 'RC' : src === 'DB2' ? 'RA' : '';
     const srcClass   = src === 'DB1' ? 'rc' : src === 'DB2' ? 'ra' : '';
-
     const db         = _currentDB();
     const showSource = db === 'MERGED' && srcLabel;
+
+    // Extras (Tipo1 / A1 / DC)
+    const extras = _computeExtras(link, sharedClli);
 
     const div = document.createElement('div');
     div.className = 'rp-item'
@@ -227436,41 +227614,97 @@ window.addZoomToSelectionControl = function(map) {
     cb.type    = 'checkbox';
     cb.checked = isSelected;
 
-    const txt     = document.createElement('div');
+    const arco     = (src === 'DB2') ? (link.Arco || '') : '';
+    const arcoBadge = arco
+      ? '<span class="rp-item-arco-badge">Arco: ' + _esc(arco) + '</span>'
+      : '';
+
+    const txt = document.createElement('div');
     txt.className = 'rp-item-text';
     txt.innerHTML =
       (showSource ? '<span class="rp-item-source ' + srcClass + '">[' + srcLabel + '] </span>' : '') +
       '<span class="rp-item-id">' + _esc(displayId) + '</span>' +
-      '<span class="rp-item-nodes">' + _esc(fromName) + ' → ' + _esc(toName) + '</span>' +
+      '<span class="rp-item-nodes"><span>' + _esc(fromName) + ' → ' + _esc(toName) + '</span>' + arcoBadge + '</span>' +
       '<span class="rp-item-meta"><strong>' + _esc(fromClli) + '</strong> → <strong>' + _esc(toClli) + '</strong>' +
       ' &nbsp;•&nbsp; <span style="color:' + _statoColor(stato) + ';font-weight:600;">' + _esc(stato) + '</span>' +
       ' &nbsp;•&nbsp; ' + _esc(km) + '</span>';
 
+    // Strip extras – layout inline a righe
+    const strip = document.createElement('div');
+    strip.className = 'rp-extras-strip';
+
+    // RIGA 1 – Tipo 1 direzionale sull'Arco (solo RA)
+    if (src === 'DB2') {
+      const t1 = extras.tipo1;
+      const tipo1Html = t1
+        ? '<span class="rp-ext-val tipo1">' + _esc(t1.name) + '</span>' +
+          ' <span class="rp-ext-clli">[' + _esc(t1.clli) + ']</span>'
+        : '<span class="rp-ext-none">nessuna T1 in direzione</span>';
+      strip.innerHTML +=
+        '<div class="rp-ext-row tipo1-row">' +
+        '<span class="rp-ext-label tipo1">🟠 T1</span>' +
+        tipo1Html +
+        '</div>';
+    }
+
+    // RIGA 2 (RA) / RIGA 1 (RC) – A1 + DC inline sulla stessa riga
+    if (extras.a1 || extras.dc) {
+      let a1dcHtml = '';
+      if (extras.a1) {
+        a1dcHtml +=
+          '<span class="rp-ext-label a1">🟣 A1</span>' +
+          '<span class="rp-ext-val a1">' + _esc(extras.a1.name) + '</span>' +
+          ' <span class="rp-ext-clli">[' + _esc(extras.a1.clli) + ']</span>' +
+          ' <span class="rp-ext-dist">≈' + _fmtDist(extras.a1.dist) + '</span>';
+      }
+      if (extras.a1 && extras.dc) {
+        a1dcHtml += '<span class="rp-ext-sep" style="margin:0 6px;">│</span>';
+      }
+      if (extras.dc) {
+        a1dcHtml +=
+          '<span class="rp-ext-label dc">🟤 DC</span>' +
+          '<span class="rp-ext-val dc">' + _esc(extras.dc.nome) + '</span>' +
+          ' <span class="rp-ext-clli">[' + _esc(extras.dc.displayClli || extras.dc.clli) + ']</span>' +
+          ' <span class="rp-ext-dist">≈' + _fmtDist(extras.dc.dist) + '</span>';
+      }
+      strip.innerHTML += '<div class="rp-ext-row a1dc-row">' + a1dcHtml + '</div>';
+    }
+
+    if (strip.innerHTML) txt.appendChild(strip);
     div.appendChild(cb);
     div.appendChild(txt);
 
     function toggle() {
-      // Legge lo stato prima del toggle dalla classe CSS
-      const itemEl = document.querySelector('#routing-panel .rp-item[data-id="' + CSS.escape(selId) + '"]');
-      const wasSel = itemEl ? itemEl.classList.contains('rp-selected') : false;
+      // Usa window.toggleLink che opera sul selectedIds della closure corretta
       if (typeof window.toggleLink === 'function') {
         window.toggleLink(selId);
       } else {
         const s = _sel();
         if (s.has(selId)) { s.delete(selId); } else { s.add(selId); }
       }
-      const nowSel = !wasSel;
+      // Legge lo stato reale dalla closure (tramite isLinkSelected esposto in toggleLink)
+      const nowSel = typeof window.isLinkSelected === 'function'
+        ? window.isLinkSelected(selId)
+        : _sel().has(selId);
+      // Aggiorna visuale pannello routing
       document.querySelectorAll('#routing-panel .rp-item[data-id="' + CSS.escape(selId) + '"]').forEach(el => {
         el.classList.toggle('rp-selected', nowSel);
-        el.querySelector('input[type=checkbox]').checked = nowSel;
+        const cb = el.querySelector('input[type=checkbox]');
+        if (cb) cb.checked = nowSel;
       });
       _rpUpdateSelInfo();
+      // Aggiorna tabella collegamenti
+      if (typeof window.buildLinksList === 'function') {
+        const fi = document.getElementById('filter');
+        window.buildLinksList(fi ? fi.value || '' : '');
+      }
     }
     div.addEventListener('click', toggle);
     cb.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
     return div;
   }
 
+  // ── Aggiorna contatore selezioni ──────────────────────────────────────
   function _rpUpdateSelInfo() {
     const allIds = new Set([..._rpLinksA, ..._rpLinksZ].map(l => l.id));
     const s = _sel();
@@ -227480,17 +227714,18 @@ window.addZoomToSelectionControl = function(map) {
     if (el) el.textContent = count + ' selezionat' + (count === 1 ? 'o' : 'i') + ' in questo pannello';
   }
 
-  function _renderList(containerId, links, filterText) {
+  // ── Rendering lista ───────────────────────────────────────────────────
+  function _renderList(containerId, links, filterText, sharedClli) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
-    const f       = (filterText || '').toLowerCase().trim();
+    const f = (filterText || '').toLowerCase().trim();
     const visible = f ? links.filter(l => {
       const blob = [
         _resolveDisplayId(l), l.from, l.to,
         _resolveNodeName(l.from_id || l.from),
         _resolveNodeName(l.to_id   || l.to),
-        l.stato || '', l._rpSource || ''
+        l.stato || '', l._rpSource || '', l.Arco || ''
       ].join(' ').toLowerCase();
       return blob.includes(f);
     }) : links;
@@ -227502,14 +227737,14 @@ window.addZoomToSelectionControl = function(map) {
       container.appendChild(empty);
     } else {
       const side = containerId === 'rp-list-a' ? 'a' : 'z';
-      visible.forEach(link => container.appendChild(_buildItem(link, side)));
+      visible.forEach(link => container.appendChild(_buildItem(link, side, sharedClli)));
     }
     const countId = containerId === 'rp-list-a' ? 'rp-col-a-count' : 'rp-col-z-count';
     const countEl = document.getElementById(countId);
     if (countEl) countEl.textContent = '(' + visible.length + '/' + links.length + ')';
   }
 
-  // ── Floating / lock ─────────────────────────────────────────────
+  // ── Floating / lock ───────────────────────────────────────────────────
   function _applyFloatingMode(floating) {
     _rpIsFloating = floating;
     const backdrop = document.getElementById('routing-panel-backdrop');
@@ -227535,6 +227770,17 @@ window.addZoomToSelectionControl = function(map) {
 
   window.rpToggleFloat = function() { _applyFloatingMode(!_rpIsFloating); };
 
+  let _rpMinimized = false;
+  window.rpToggleMinimize = function() {
+    _rpMinimized = !_rpMinimized;
+    const panel = document.getElementById('routing-panel');
+    const btn   = document.getElementById('rp-minimize-btn');
+    if (!panel) return;
+    panel.classList.toggle('rp-minimized', _rpMinimized);
+    if (btn) btn.textContent = _rpMinimized ? '🗖' : '🗕';
+    if (btn) btn.title = _rpMinimized ? 'Ripristina pannello' : 'Riduci pannello';
+  };
+
   window.rpSnap = function(pos) {
     const panel = document.getElementById('routing-panel');
     if (!panel) return;
@@ -227543,17 +227789,17 @@ window.addZoomToSelectionControl = function(map) {
     const G  = 12;
     let left, top;
     switch(pos) {
-      case 'tl': left = G;          top = G; break;
-      case 'tr': left = vw-pw-G;    top = G; break;
-      case 'bl': left = G;          top = vh-ph-G; break;
-      case 'br': left = vw-pw-G;    top = vh-ph-G; break;
-      default:   left = (vw-pw)/2;  top = (vh-ph)/2; break;
+      case 'tl': left = G;         top = G; break;
+      case 'tr': left = vw-pw-G;   top = G; break;
+      case 'bl': left = G;         top = vh-ph-G; break;
+      case 'br': left = vw-pw-G;   top = vh-ph-G; break;
+      default:   left = (vw-pw)/2; top = (vh-ph)/2; break;
     }
     panel.style.left = Math.max(0, left) + 'px';
     panel.style.top  = Math.max(0, top)  + 'px';
   };
 
-  // ── Drag ────────────────────────────────────────────────────────
+  // ── Drag ──────────────────────────────────────────────────────────────
   function _initDrag() {
     const header = document.getElementById('routing-panel-header');
     if (header) header.addEventListener('mousedown', _onDragStart);
@@ -227587,57 +227833,58 @@ window.addZoomToSelectionControl = function(map) {
     document.removeEventListener('mouseup',   _onDragEnd);
   }
 
-  // ── Scroll block ────────────────────────────────────────────────
+  // ── Scroll block ──────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function() {
     const panel = document.getElementById('routing-panel');
     if (!panel) return;
-    panel.addEventListener('wheel',      function(e) { e.stopPropagation(); }, { passive: false, capture: true });
-    panel.addEventListener('touchmove',  function(e) { e.stopPropagation(); }, { passive: false, capture: true });
+    panel.addEventListener('wheel',     function(e) { e.stopPropagation(); }, { passive: false, capture: true });
+    panel.addEventListener('touchmove', function(e) { e.stopPropagation(); }, { passive: false, capture: true });
   });
 
-  // ── API pubblica ─────────────────────────────────────────────────
+  // ── API pubblica ──────────────────────────────────────────────────────
   window.showRoutingPanel = function(linkId) {
     const db   = _currentDB();
-    // Trova il link nell'array LINKS corrente
     const link = _links().find(l => l.id === linkId);
     if (!link) return;
     _rpCurrentLink = link;
 
-    const clliA = link.from_id || link.from;
-    const clliZ = link.to_id   || link.to;
+    _rpClliA = link.from_id || link.from;
+    _rpClliZ = link.to_id   || link.to;
 
-    _rpLinksA = _getAdjacentLinks(clliA, linkId);
-    _rpLinksZ = _getAdjacentLinks(clliZ, linkId);
+    _rpLinksA = _getAdjacentLinks(_rpClliA, linkId, link, 'A');
+    _rpLinksZ = _getAdjacentLinks(_rpClliZ, linkId, link, 'Z');
     _rpLinksA.sort((a,b) => _resolveDisplayId(a).localeCompare(_resolveDisplayId(b)));
     _rpLinksZ.sort((a,b) => _resolveDisplayId(a).localeCompare(_resolveDisplayId(b)));
 
-    const nameA = _resolveNodeName(clliA);
-    const nameZ = _resolveNodeName(clliZ);
+    const nameA     = _resolveNodeName(_rpClliA);
+    const nameZ     = _resolveNodeName(_rpClliZ);
     const displayId = _resolveDisplayId(link);
 
     // Badge DB nel header
     const badge = document.getElementById('rp-db-badge-header');
     if (badge) {
-      if (db === 'MERGED') badge.innerHTML = '<span class="rp-db-badge merged">RC + RA</span>';
-      else if (db === 'DB1') badge.innerHTML = '<span class="rp-db-badge rc">RC</span>';
-      else if (db === 'DB2') badge.innerHTML = '<span class="rp-db-badge ra">RA</span>';
-      else badge.innerHTML = '';
+      if (db === 'MERGED')       badge.innerHTML = '<span class="rp-db-badge merged">RC + RA</span>';
+      else if (db === 'DB1')     badge.innerHTML = '<span class="rp-db-badge rc">RC</span>';
+      else if (db === 'DB2')     badge.innerHTML = '<span class="rp-db-badge ra">RA</span>';
+      else                       badge.innerHTML = '';
     }
 
     document.getElementById('rp-link-id-display').textContent = displayId;
     document.getElementById('rp-nodes-display').textContent   = nameA + ' ⟶ ' + nameZ;
-    document.getElementById('rp-col-a-title').textContent     = 'Lato ' + clliA;
-    document.getElementById('rp-col-z-title').textContent     = 'Lato ' + clliZ;
+    document.getElementById('rp-col-a-title').textContent     = 'Lato ' + _rpClliA;
+    document.getElementById('rp-col-z-title').textContent     = 'Lato ' + _rpClliZ;
 
     const sa = document.getElementById('rp-search-a');
     const sz = document.getElementById('rp-search-z');
     if (sa) sa.value = '';
     if (sz) sz.value = '';
 
-    _renderList('rp-list-a', _rpLinksA, '');
-    _renderList('rp-list-z', _rpLinksZ, '');
+    _renderList('rp-list-a', _rpLinksA, '', _rpClliA);
+    _renderList('rp-list-z', _rpLinksZ, '', _rpClliZ);
     _rpUpdateSelInfo();
 
+    // Ripristina se era minimizzato
+    if (_rpMinimized) window.rpToggleMinimize();
     document.getElementById('routing-panel-backdrop').classList.add('show');
     _applyFloatingMode(_rpIsFloating);
   };
@@ -227650,44 +227897,54 @@ window.addZoomToSelectionControl = function(map) {
   window.rpFilterList = function(side) {
     const input = document.getElementById('rp-search-' + side);
     const f     = input ? input.value : '';
-    _renderList(side === 'a' ? 'rp-list-a' : 'rp-list-z',
-                side === 'a' ? _rpLinksA  : _rpLinksZ, f);
+    const sharedClli = side === 'a' ? _rpClliA : _rpClliZ;
+    _renderList(
+      side === 'a' ? 'rp-list-a' : 'rp-list-z',
+      side === 'a' ? _rpLinksA  : _rpLinksZ,
+      f, sharedClli
+    );
     _rpUpdateSelInfo();
   };
 
   window.rpSelectAllVisible = function() {
     document.querySelectorAll('#routing-panel .rp-item').forEach(el => {
       const id = el.dataset.id;
-      if (typeof window.toggleLink === 'function') {
-        if (!_sel().has(id)) window.toggleLink(id);
-      } else {
-        _sel().add(id);
-      }
+      // Seleziona solo se non già selezionato (evita doppio toggle)
+      const alreadySel = typeof window.isLinkSelected === 'function'
+        ? window.isLinkSelected(id) : false;
+      if (!alreadySel && typeof window.toggleLink === 'function') window.toggleLink(id);
       el.classList.add('rp-selected');
       const cb = el.querySelector('input[type=checkbox]');
       if (cb) cb.checked = true;
     });
-    _rpUpdateSelInfo(); _syncUI();
+    _rpUpdateSelInfo();
+    if (typeof window.buildLinksList === 'function') {
+      const fi = document.getElementById('filter');
+      window.buildLinksList(fi ? fi.value || '' : '');
+    }
   };
 
   window.rpDeselectAll = function() {
     const allIds = new Set([..._rpLinksA, ..._rpLinksZ].map(l => l.id));
     allIds.forEach(id => {
-      if (typeof window.toggleLink === 'function') {
-        if (_sel().has(id)) window.toggleLink(id);
-      } else {
-        _sel().delete(id);
-      }
+      // Deseleziona solo se attualmente selezionato
+      const isSel = typeof window.isLinkSelected === 'function'
+        ? window.isLinkSelected(id) : false;
+      if (isSel && typeof window.toggleLink === 'function') window.toggleLink(id);
     });
     document.querySelectorAll('#routing-panel .rp-item').forEach(el => {
       el.classList.remove('rp-selected');
       const cb = el.querySelector('input[type=checkbox]');
       if (cb) cb.checked = false;
     });
-    _rpUpdateSelInfo(); _syncUI();
+    _rpUpdateSelInfo();
+    if (typeof window.buildLinksList === 'function') {
+      const fi = document.getElementById('filter');
+      window.buildLinksList(fi ? fi.value || '' : '');
+    }
   };
 
-  // Chiudi cliccando sul backdrop (solo modalità ancorata)
+  // Chiudi cliccando backdrop (solo ancorato)
   document.addEventListener('click', function(e) {
     if (_rpIsFloating) return;
     const backdrop = document.getElementById('routing-panel-backdrop');
