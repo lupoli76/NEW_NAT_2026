@@ -2197,6 +2197,31 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
     }
 
     /* ════════════════════════════════════════════════════════════ */
+    /* STILI ETICHETTE CLLI SUI NODI */
+    /* ════════════════════════════════════════════════════════════ */
+    .clli-label-icon {
+      background: transparent !important;
+      border: none !important;
+      pointer-events: none !important;
+    }
+    .clli-label-text {
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      pointer-events: none;
+      letter-spacing: 0.02em;
+      text-shadow:
+        -1px -1px 0 rgba(255,255,255,1),
+         1px -1px 0 rgba(255,255,255,1),
+        -1px  1px 0 rgba(255,255,255,1),
+         1px  1px 0 rgba(255,255,255,1),
+        -2px  0   0 rgba(255,255,255,0.8),
+         2px  0   0 rgba(255,255,255,0.8),
+         0   -2px 0 rgba(255,255,255,0.8),
+         0    2px 0 rgba(255,255,255,0.8);
+    }
+
+    /* ════════════════════════════════════════════════════════════ */
     /* STILI POPUP DRAGGABLE - Centrali COLT Vicine */
     /* ════════════════════════════════════════════════════════════ */
     #nearest-routes-panel {
@@ -5020,6 +5045,20 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
 
   <div class="box controls">
     <h2>🕹️ Controlli mappa</h2>
+  <label>
+    <input type="checkbox" id="toggle-clli-labels" />
+    <span>
+      Mostra CLLI sui Nodi
+      <span style="font-size:0.82em; color:#555; margin-left:4px;">
+        (<span style="color:#646464;font-weight:bold;">◉</span> non sel.
+        · <span style="color:#0000b4;font-weight:bold;">◉</span> RA
+        · <span style="color:#b40000;font-weight:bold;">◉</span> RC
+        · <span style="color:#6e00c8;font-weight:bold;">◉</span> RA+RC
+        · <span style="color:#0096ff;font-weight:bold;">◉</span> A1
+        · <span style="color:#be00be;font-weight:bold;">◉</span> DC)
+      </span>
+    </span>
+  </label>
 <label>
     <input type="checkbox" id="toggle-markers" checked />
     <span>Mostra Tutte le Centrali / Nodi sulla Mappa</span>
@@ -32810,6 +32849,8 @@ window.selectedNodeIds = selectedNodeIds;
   let showOnlySelectedNodes = false;
   let showAllTooltips = false; // Mostra tutti i tooltip degli elementi selezionati
   let manuallyClosedTooltips = new Set(); // Traccia i tooltip chiusi manualmente (format: "node:id" o "link:id")
+  let showClliLabels = false; // Mostra CLLI sui nodi
+  let clliLabelLayers = new Map(); // Layer etichette CLLI
 
   // Layer e stato per strumenti di misura e ricerca su mappa
   let measureEnabled = false;
@@ -33447,6 +33488,16 @@ function clearAllMapElements() {
     // Reset showAllTooltips
     if (typeof showAllTooltips !== 'undefined') {
       showAllTooltips = false;
+    }
+    // Reset showClliLabels e rimuovi etichette dalla mappa
+    if (typeof showClliLabels !== 'undefined') {
+      showClliLabels = false;
+      const togClli = document.getElementById('toggle-clli-labels');
+      if (togClli) togClli.checked = false;
+    }
+    if (typeof clliLabelLayers !== 'undefined' && clliLabelLayers instanceof Map) {
+      clliLabelLayers.forEach(function(m) { try { map.removeLayer(m); } catch(e){} });
+      clliLabelLayers.clear();
     }
     // Reset manuallyClosedTooltips
     if (typeof manuallyClosedTooltips !== 'undefined' && manuallyClosedTooltips instanceof Set) {
@@ -34485,11 +34536,90 @@ function drawMarkers() {
   // Applica eventuali regole di evidenziazione (nodi collegati, ecc.)
   updateNodeStyles();
   
+  // Aggiorna le etichette CLLI se il toggle è attivo
+  updateClliLabels();
+  
   // Aggiorna i tooltip se il toggle è attivo
   if (showAllTooltips) {
     updateAllTooltips();
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// [FUNC-009B] UPDATE CLLI LABELS
+// Mostra/aggiorna le etichette CLLI sui nodi della mappa
+// Colori: grigio=non sel. · blu=RA · rosso=RC · viola=RA+RC · azzurro=A1 · magenta=DC
+// ═══════════════════════════════════════════════════════════════════════════
+function updateClliLabels() {
+  // Rimuovi tutte le etichette CLLI esistenti
+  clliLabelLayers.forEach(function(m) { map.removeLayer(m); });
+  clliLabelLayers.clear();
+
+  // Se toggle spento E nessuna selezione attiva → nulla da disegnare
+  if (!showClliLabels && selectedNodeIds.size === 0) return;
+
+  const currentDB = window.DB_STATE ? window.DB_STATE.currentDB : 'DB1';
+  const nodesToDisplay = (currentDB === 'DB2' || currentDB === 'MERGED') && typeof getExpandedNodesForDisplay === 'function'
+    ? getExpandedNodesForDisplay()
+    : NODES;
+
+  nodesToDisplay.forEach(function(n) {
+    if (n.lat == null || n.lon == null) return;
+    if (!n.clli) return;
+    // Rispetta i filtri zona/area attivi
+    if (n.zona && !isZoneActive(n.zona)) return;
+    if (n.area && window.activeAreas && !window.activeAreas.has(n.area)) return;
+
+    const nodeIdForSelection = n._displayId || n.id;
+    const isSelected = selectedNodeIds.has(nodeIdForSelection) || selectedNodeIds.has(n.id);
+
+    // Se il toggle è spento mostra solo i nodi selezionati
+    if (!showClliLabels && !isSelected) return;
+
+    let color;
+    if (!isSelected) {
+      color = '#646464'; // Grigio scuro – non selezionato
+    } else {
+      // Priorità: DC > NODO A1 > BOTH > RC > RA
+      const nodeClli = (n.clli || '').toUpperCase();
+      const isDC  = window.DATA_CENTER_CLLI_SET && window.DATA_CENTER_CLLI_SET.has(nodeClli);
+      const isA1  = window.NODI_A1_CLLI_SET && window.NODI_A1_CLLI_SET.has(nodeClli);
+
+      if (isDC) {
+        color = '#be00be'; // Magenta – Data Center
+      } else if (isA1) {
+        color = '#0096ff'; // Azzurro – Nodo A1
+      } else if (currentDB === 'MERGED') {
+        if (n._source === 'BOTH') {
+          color = '#6e00c8'; // Viola – presente su RA e RC
+        } else if (n._source === 'DB2' || n._dbSource === 'RA') {
+          color = '#0000b4'; // Blu – solo RA
+        } else {
+          color = '#b40000'; // Rosso – solo RC
+        }
+      } else if (currentDB === 'DB2') {
+        color = '#0000b4'; // Blu – DB RA
+      } else {
+        color = '#b40000'; // Rosso – DB RC
+      }
+    }
+
+    const labelMarker = L.marker([n.lat, n.lon], {
+      icon: L.divIcon({
+        className: 'clli-label-icon',
+        html: '<span class="clli-label-text" style="color:' + color + ';">' + n.clli + '</span>',
+        iconAnchor: [0, 20],
+        iconSize: null
+      }),
+      interactive: false,
+      pane: 'tooltipPane'
+    });
+
+    labelMarker.addTo(map);
+    clliLabelLayers.set(n._displayId || n.id, labelMarker);
+  });
+}
+window.updateClliLabels = updateClliLabels;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // [FUNC-010] DRAW LINKS
@@ -35068,6 +35198,11 @@ function nodeMatchesFilter(node, text) {
         const nodeClli = (n.clli || '').toUpperCase();
         if (window.DATA_CENTER_CLLI_SET && window.DATA_CENTER_CLLI_SET.has(nodeClli)) {
           tipoSuffix += ' <span style="background:#d1008f; color:white; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:bold;">DC</span>';
+        }
+        
+        // Aggiungi badge A1 per Nodi A1 (azzurro)
+        if (window.NODI_A1_CLLI_SET && window.NODI_A1_CLLI_SET.has(nodeClli)) {
+          tipoSuffix += ' <span style="background:#0096ff; color:white; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:bold;">A1</span>';
         }
         
         nodeHTML +=
@@ -35705,6 +35840,15 @@ document.getElementById('btn-select').addEventListener('click', () => {
           manuallyClosedTooltips.clear();
           
           updateAllTooltips();
+        });
+      }
+
+      // Event listener per mostrare le etichette CLLI sui nodi
+      const toggleClliLabels = document.getElementById('toggle-clli-labels');
+      if (toggleClliLabels) {
+        toggleClliLabels.addEventListener('change', function(e) {
+          showClliLabels = e.target.checked;
+          updateClliLabels();
         });
       }
     
