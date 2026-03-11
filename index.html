@@ -5118,7 +5118,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
   <!-- Inizio Footer di Progetto -->
 <div class="project-info" style="font-size: 0.85em; text-align: center; color: #555555;">
     <div>
-        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.13 • 23/02/2026]
+        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.14 • 11/03/2026]
     </div>
 
     <div style="margin-top: 3px;">
@@ -35092,8 +35092,9 @@ function nodeMatchesFilter(node, text) {
       // In modalità MERGED, aggiungi anche i nodi RC che non hanno TipoSede
       if (currentDB === 'MERGED') {
         NODES.forEach(n => {
-          // Se il nodo proviene solo da DB1 (RC), aggiungilo come nodo RC
-          if (n._source === 'DB1') {
+          // Se il nodo proviene da DB1 (RC) oppure da ENTRAMBI i DB (BOTH),
+          // aggiungilo come nodo RC — fix: _source 'BOTH' veniva saltato
+          if (n._source === 'DB1' || n._source === 'BOTH') {
             const comboKey = `${n.clli || n.id}_RC`;
             if (!seenCombinations.has(comboKey)) {
               seenCombinations.add(comboKey);
@@ -37694,6 +37695,11 @@ function switchDatabase(dbType) {
     nodesById.clear();
     NODES.forEach(n => {
       if (n.id != null) nodesById.set(n.id, n);
+      // In MERGED: indicizza anche per CLLI se diverso da id,
+      // così i link RC (che usano CLLI come from/to) trovano sempre il nodo
+      if (window.DB_STATE.currentDB === 'MERGED' && n.clli && n.clli !== n.id) {
+        if (!nodesById.has(n.clli)) nodesById.set(n.clli, n);
+      }
     });
     
     // ✅ RICOSTRUISCI nodeLinksIndex per evidenziazione nodi connessi
@@ -221953,6 +221959,14 @@ const roadRoute = L.polyline(coords, {
       <p><strong>NAT (National Topography) Italia</strong> è uno strumento professionale di visualizzazione, analisi e gestione delle reti nazionali italiane di telecomunicazioni DWDM. Progettato per ingegneri, tecnici e manager che operano nell'ambito delle infrastrutture di rete backbone (RC) e access (RA).</p>
 
       <div class="guide-highlight">
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.14 (11/03/2026):</strong><br/>
+        ✅ <strong>🔀 Fix DB UNIFICATO – Centrali/Nodi (sezione 🌐):</strong> Corretta visualizzazione nel filtro centrali in modalità MERGED<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• In precedenza, le centrali presenti in <strong>entrambi</strong> i DB (RC e RA) avevano <code>_source:'BOTH'</code> e la loro versione RC non veniva mai aggiunta alla lista <br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Fix: la condizione ora include <code>_source === 'BOTH'</code> oltre a <code>'DB1'</code> — tutte le centrali RC (solo-RC e condivise RC+RA) appaiono correttamente con il badge <span style="background:#b91c1c;color:white;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:bold;">RC</span><br/>
+        ✅ <strong>🔗 Fix DB UNIFICATO – Indice nodi per links (sezione 🔗):</strong> In modalità MERGED, <code>nodesById</code> viene ora indicizzato anche per CLLI (oltre che per id)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Garantisce che i link RC (che referenziano i nodi per CLLI) trovino sempre il nodo corrispondente in modalità MERGED<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Previene il caso in cui un link RC venisse silenziosamente escluso dalla lista per fallimento del lookup nodo<br/><br/>
+
         <p><strong>🆕 NOVITÀ VERSIONE Rev22.13 (23/02/2026):</strong><br/>
         ✅ <strong>🔀 Pannello Routing Suggerito (RA + RC):</strong> Nuova finestra contestuale di supporto al routing per ogni collegamento<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Bottone 🔀 su ogni riga della tabella "🔗 Collegamenti" apre il pannello<br/>
