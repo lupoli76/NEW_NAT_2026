@@ -3,7 +3,7 @@
 <!--
 ╔═════════════════════════════════════════════════════════════════════════════════╗
 ║                        NAT ITALIA - INDICE DEL FILE                             ║
-║                        Rev. 22.10 - Struttura Organizzata                       ║
+║                        Rev. 22.16 - Struttura Organizzata                       ║
 ╠═════════════════════════════════════════════════════════════════════════════════╣
 ║                                                                                 ║
 ║  📋 INDICE SEZIONI (per ricerca veloce usare Ctrl+F):                           ║
@@ -5118,7 +5118,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
   <!-- Inizio Footer di Progetto -->
 <div class="project-info" style="font-size: 0.85em; text-align: center; color: #555555;">
     <div>
-        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.15 • 14/04/2026]
+        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.16 • 21/04/2026]
     </div>
 
     <div style="margin-top: 3px;">
@@ -32856,6 +32856,7 @@ window.selectedNodeIds = selectedNodeIds;
   let measureEnabled = false;
   let measurePoints = [];
   let measureLayers = null;
+  let measurePanels = []; // Pannelli floating delle misure (non sono Leaflet layer)
   let geocodeMarker = null;
   let geocodeResults = [];
 
@@ -33600,6 +33601,9 @@ function setupMeasureTools(map) {
           measureLayers.clearLayers();
         }
         measurePoints = [];
+        // Rimuovi tutti i pannelli floating delle misure
+        measurePanels.forEach(function(p) { if (p && p.parentNode) p.parentNode.removeChild(p); });
+        measurePanels = [];
       });
 
       L.DomEvent.disableClickPropagation(container);
@@ -33630,14 +33634,14 @@ function setupMeasureTools(map) {
       const p1 = measurePoints[0];
       const p2 = measurePoints[1];
 
-      // linea tra i due punti
+      // Linea d'aria (rossa tratteggiata)
       L.polyline([p1, p2], {
         color: '#ff0000',
         weight: 3,
         dashArray: '4,4'
       }).addTo(measureLayers);
 
-      // punto finale
+      // Punto finale
       L.circleMarker(p2, {
         radius: 4,
         color: '#ff0000',
@@ -33645,33 +33649,178 @@ function setupMeasureTools(map) {
         fillOpacity: 0.9
       }).addTo(measureLayers);
 
-      // distanza in metri
-      const dist = p1.distanceTo(p2);
-      let text;
-      if (dist >= 1000) {
-        text = (dist / 1000).toFixed(2) + ' km';
-      } else {
-        text = dist.toFixed(0) + ' m';
-      }
+      // Distanza linea d'aria
+      const distMeters = p1.distanceTo(p2);
+      const distStraightKm = distMeters / 1000;
+      const distStraightText = distMeters >= 1000
+        ? distStraightKm.toFixed(2) + ' km'
+        : distMeters.toFixed(0) + ' m';
 
-      // centro della linea per l'etichetta
       const mid = L.latLng(
         (p1.lat + p2.lat) / 2,
         (p1.lng + p2.lng) / 2
       );
-	  
-	  // Aggiungo il prefisso letterale
-const labelHtml = '<span style="font-size: 10px; color: var(--error-light);">📍</span> ' + text;
 
-      L.marker(mid, {
-        interactive: false,
+      // ── Pannello floating draggabile ─────────────────────────────────────
+      const panelId = 'msr-' + Date.now();
+      const mapContainer = map.getContainer();
+
+      // Converti il punto medio geografico in coordinate pixel nella mappa
+      const midPx = map.latLngToContainerPoint(mid);
+      const panelW = 240;
+      const panelH = 90; // altezza stimata prima del render
+      // Offset leggero verso destra/basso rispetto al punto medio;
+      // se troppo vicino al bordo destro/inferiore, sposta a sinistra/sopra
+      const cr2 = mapContainer.getBoundingClientRect();
+      let px = midPx.x + 14;
+      let py = midPx.y + 14;
+      if (px + panelW > cr2.width  - 10) px = midPx.x - panelW - 14;
+      if (py + panelH > cr2.height - 10) py = midPx.y - panelH - 14;
+      px = Math.max(4, px);
+      py = Math.max(4, py);
+
+      const panel = document.createElement('div');
+      panel.id = panelId;
+      panel.style.cssText = [
+        'position:absolute',
+        'top:' + py + 'px',
+        'left:' + px + 'px',
+        'z-index:1500',
+        'background:#fff',
+        'border:2px solid #cc0000',
+        'border-radius:8px',
+        'box-shadow:0 3px 12px rgba(0,0,0,0.35)',
+        'min-width:235px',
+        'font-family:inherit',
+        'font-size:12px',
+        'user-select:none'
+      ].join(';');
+
+      panel.innerHTML =
+        '<div id="' + panelId + '-hdr" style="' +
+          'background:#cc0000;color:#fff;' +
+          'padding:5px 8px;' +
+          'border-radius:6px 6px 0 0;' +
+          'display:flex;justify-content:space-between;align-items:center;gap:6px;' +
+          'cursor:move;">' +
+          '<span style="font-size:11px;font-weight:700;">📏 Distanze Misura</span>' +
+          '<div style="display:flex;gap:5px;align-items:center;">' +
+            '<span title="Trascina intestazione per spostare" style="opacity:0.7;font-size:13px;cursor:move;">⠿</span>' +
+            '<button id="' + panelId + '-close" title="Chiudi — clicca il marker 📏 per riaprire"' +
+              ' style="background:none;border:none;color:#fff;cursor:pointer;font-size:15px;line-height:1;padding:0 2px;">✕</button>' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:9px 12px;line-height:1.9;">' +
+          '<div>📏 <strong>Linea d\'aria:</strong>&nbsp;' + distStraightText + '</div>' +
+          '<div id="' + panelId + '-road">🛣️ <strong>Distanza stradale:</strong>&nbsp;<em style="color:#888;">calcolando…</em></div>' +
+        '</div>' +
+        '<div style="font-size:10px;color:#bbb;text-align:right;padding:0 10px 5px;">' +
+          'trascina per spostare' +
+        '</div>';
+
+      mapContainer.appendChild(panel);
+      measurePanels.push(panel);
+
+      // Chiudi
+      document.getElementById(panelId + '-close').addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        panel.style.display = 'none';
+      });
+
+      // Marker 📏 al centro del segmento → riapre il pannello
+      const reopenMarker = L.marker(mid, {
         icon: L.divIcon({
-          className: 'measure-label',
-          html: '📏 ' + text
-        })
+          className: '',
+          html: '<div title="Mostra distanze" style="' +
+                  'background:#cc0000;color:#fff;' +
+                  'border-radius:50%;width:22px;height:22px;' +
+                  'display:flex;align-items:center;justify-content:center;' +
+                  'font-size:12px;cursor:pointer;' +
+                  'box-shadow:0 1px 5px rgba(0,0,0,0.4);' +
+                  'border:2px solid #fff;">📏</div>',
+          iconSize: [22, 22],
+          iconAnchor: [11, 11]
+        }),
+        title: 'Mostra distanze'
       }).addTo(measureLayers);
 
-      // pronto per una nuova misura (mantengo le misure precedenti)
+      reopenMarker.on('click', function(ev) {
+        L.DomEvent.stop(ev);
+        panel.style.display = 'block';
+      });
+
+      // ── Drag ────────────────────────────────────────────────────────────
+      const hdr = document.getElementById(panelId + '-hdr');
+      let _drag = false, _ox = 0, _oy = 0;
+
+      hdr.addEventListener('mousedown', function(ev) {
+        if (ev.target.id === panelId + '-close') return;
+        _drag = true;
+        map.dragging.disable();
+        const cr = mapContainer.getBoundingClientRect();
+        const pr = panel.getBoundingClientRect();
+        // Converti right→left per poter muovere con left
+        panel.style.left  = (pr.left - cr.left) + 'px';
+        panel.style.right = 'auto';
+        panel.style.top   = (pr.top  - cr.top)  + 'px';
+        _ox = ev.clientX - (pr.left - cr.left);
+        _oy = ev.clientY - (pr.top  - cr.top);
+        ev.preventDefault();
+      });
+
+      function _onMove(ev) {
+        if (!_drag) return;
+        const cr = mapContainer.getBoundingClientRect();
+        panel.style.left = Math.max(0, Math.min(ev.clientX - _ox, cr.width  - panel.offsetWidth))  + 'px';
+        panel.style.top  = Math.max(0, Math.min(ev.clientY - _oy, cr.height - panel.offsetHeight)) + 'px';
+      }
+      function _onUp() {
+        if (!_drag) return;
+        _drag = false;
+        map.dragging.enable();
+      }
+      document.addEventListener('mousemove', _onMove);
+      document.addEventListener('mouseup',   _onUp);
+
+      // Evita click-through alla mappa durante drag
+      L.DomEvent.disableClickPropagation(panel);
+
+      // ── Chiamata OSRM ────────────────────────────────────────────────────
+      const osrmUrl =
+        'https://routing.openstreetmap.de/routed-foot/route/v1/driving/' +
+        p1.lng + ',' + p1.lat + ';' + p2.lng + ',' + p2.lat +
+        '?overview=full&geometries=geojson';
+
+      fetch(osrmUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var roadDiv = document.getElementById(panelId + '-road');
+          if (!data.routes || !data.routes.length) {
+            if (roadDiv) roadDiv.innerHTML = '🛣️ <strong>Distanza stradale:</strong>&nbsp;<em style="color:#888;">N/D (nessun percorso)</em>';
+            return;
+          }
+          var route = data.routes[0];
+          var roadCoords = route.geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
+          var roadDistKm = route.distance / 1000;
+          var roadDistText = roadDistKm >= 1
+            ? roadDistKm.toFixed(2) + ' km'
+            : route.distance.toFixed(0) + ' m';
+
+          L.polyline(roadCoords, {
+            color: '#0055ff',
+            weight: 3,
+            opacity: 0.75
+          }).addTo(measureLayers);
+
+          if (roadDiv) roadDiv.innerHTML =
+            '🛣️ <strong>Distanza stradale:</strong>&nbsp;<strong>' + roadDistText + '</strong>';
+        })
+        .catch(function() {
+          var roadDiv = document.getElementById(panelId + '-road');
+          if (roadDiv) roadDiv.innerHTML = '🛣️ <strong>Distanza stradale:</strong>&nbsp;<em style="color:#c00;">⚠️ errore OSRM</em>';
+        });
+
+      // Pronto per una nuova misura (mantengo le misure precedenti)
       measurePoints = [];
     }
   });
@@ -221960,6 +222109,15 @@ const roadRoute = L.polyline(coords, {
       <p><strong>NAT (National Topography) Italia</strong> è uno strumento professionale di visualizzazione, analisi e gestione delle reti nazionali italiane di telecomunicazioni DWDM. Progettato per ingegneri, tecnici e manager che operano nell'ambito delle infrastrutture di rete backbone (RC) e access (RA).</p>
 
       <div class="guide-highlight">
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.16 (21/04/2026):</strong><br/>
+        ✅ <strong>📏 Strumento di Misura – Distanza Stradale via OSRM:</strong> Lo strumento "📏 Clicca 2 Punti" mostra ora anche la distanza percorso stradale (urbano/extra-urbano) oltre alla classica linea d'aria<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Dopo il secondo click appare un pannello floating draggabile con linea d'aria immediata e "calcolando…" per la stradale<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il percorso stradale ottimale viene interrogato via OSRM e disegnato in blu sulla mappa<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il pannello si aggiorna automaticamente con la distanza stradale al ritorno della risposta OSRM<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Pannello chiudibile (✕)</strong> e <strong>richiamabile</strong> cliccando il marker 📏 rosso al centro del segmento<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Pannello draggabile</strong>: trascina l'intestazione rossa per spostarlo liberamente sulla mappa senza coprire i percorsi<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il bottone 🗑️ "Cancella Misure" rimuove linee, percorsi stradali blu, marker e pannelli<br/><br/>
+
         <p><strong>🆕 NOVITÀ VERSIONE Rev22.15 (14/04/2026):</strong><br/>
         ✅ <strong>🗺️ Fix Map Tiles – Provider sostituito:</strong> Rimpiazzato il tile server OpenStreetMap con CartoDB Positron<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Il server OSM (<code>tile.openstreetmap.org</code>) blocca le richieste senza <code>Referer</code> HTTP valido con errore <strong>403r</strong><br/>
