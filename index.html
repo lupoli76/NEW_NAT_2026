@@ -5118,7 +5118,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
   <!-- Inizio Footer di Progetto -->
 <div class="project-info" style="font-size: 0.85em; text-align: center; color: #555555;">
     <div>
-        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.16 • 21/04/2026]
+        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.17 • 08/05/2026]
     </div>
 
     <div style="margin-top: 3px;">
@@ -33372,6 +33372,19 @@ function clearAllMapElements() {
     }
   }
 
+  // 3b) Rimuovi percorsi stradali dei collegamenti selezionati
+  if (window.linkRoadRouteLayers && window.linkRoadRouteLayers.size > 0) {
+    try {
+      window.linkRoadRouteLayers.forEach((layer) => {
+        try { mapRef.removeLayer(layer); } catch(e2) {}
+      });
+      window.linkRoadRouteLayers.clear();
+      removedCount++;
+    } catch (e) {
+      console.warn('[ClearAll] Impossibile rimuovere linkRoadRouteLayers', e);
+    }
+  }
+
   // 4) Chiudi pannello Centrali COLT Vicine
   if (window.nearestRoutesPanel) {
     try {
@@ -34905,7 +34918,89 @@ function drawLinks() {
     if (showAllTooltips) {
       updateAllTooltips();
     }
+
+    // Sincronizza percorsi stradali OSRM per i collegamenti selezionati
+    syncLinkRoadRoutes();
   }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // PERCORSO STRADALE SU SELEZIONE COLLEGAMENTO (OSRM - solo grafico)
+  // Disegna il percorso pedonale più breve tra i due nodi del collegamento
+  // selezionato. La distanza visualizzata rimane sempre quella del DB.
+  // ══════════════════════════════════════════════════════════════════════════
+  if (!window.linkRoadRouteLayers) window.linkRoadRouteLayers = new Map();
+  if (!window.linkRoadRouteCache)  window.linkRoadRouteCache  = new Map();
+
+  function syncLinkRoadRoutes() {
+    if (!window.linkRoadRouteLayers) window.linkRoadRouteLayers = new Map();
+    if (!window.linkRoadRouteCache)  window.linkRoadRouteCache  = new Map();
+
+    // 1) Rimuovi percorsi stradali per link deselezionati
+    window.linkRoadRouteLayers.forEach((layer, linkId) => {
+      if (!selectedIds.has(linkId)) {
+        try { map.removeLayer(layer); } catch(e) {}
+        window.linkRoadRouteLayers.delete(linkId);
+      }
+    });
+
+    // 2) Aggiungi percorsi stradali per link selezionati (non ancora disegnati)
+    selectedIds.forEach(linkId => {
+      if (window.linkRoadRouteLayers.has(linkId)) return; // già presente
+
+      const link = LINKS.find(l => l.id === linkId);
+      if (!link) return;
+      const from = nodesById.get(link.from_id || link.from);
+      const to   = nodesById.get(link.to_id   || link.to);
+      if (!from || !to) return;
+
+      function drawRoadPolyline(coords) {
+        if (!selectedIds.has(linkId)) return; // nel frattempo deselezionato
+        if (window.linkRoadRouteLayers.has(linkId)) return;
+        const roadLayer = L.polyline(coords, {
+          color:     '#8B0000',
+          weight:    3,
+          opacity:   0.70,
+          dashArray: '10,7'
+        }).addTo(map);
+        // Porta la linea d'aria in primo piano rispetto al percorso stradale
+        const airLayer = linkLayers.get(linkId);
+        if (airLayer) airLayer.bringToFront();
+        window.linkRoadRouteLayers.set(linkId, roadLayer);
+      }
+
+      // Se risultato già in cache, disegna subito
+      if (window.linkRoadRouteCache.has(linkId)) {
+        const cached = window.linkRoadRouteCache.get(linkId);
+        if (cached) drawRoadPolyline(cached);
+        return;
+      }
+
+      // Segna come "in fetch" (null = fetch in corso) per evitare chiamate doppie
+      window.linkRoadRouteCache.set(linkId, null);
+
+      const osrmUrl =
+        'https://routing.openstreetmap.de/routed-foot/route/v1/foot/' +
+        from.lon + ',' + from.lat + ';' +
+        to.lon   + ',' + to.lat   +
+        '?overview=full&geometries=geojson';
+
+      fetch(osrmUrl)
+        .then(r => r.json())
+        .then(data => {
+          if (!data.routes || !data.routes.length) {
+            window.linkRoadRouteCache.delete(linkId);
+            return;
+          }
+          const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+          window.linkRoadRouteCache.set(linkId, coords);
+          drawRoadPolyline(coords);
+        })
+        .catch(() => {
+          window.linkRoadRouteCache.delete(linkId);
+        });
+    });
+  }
+  window.syncLinkRoadRoutes = syncLinkRoadRoutes;
 
   // 📌 Funzione per mostrare/nascondere tutti i tooltip degli elementi selezionati
   function updateAllTooltips() {
@@ -222109,6 +222204,10 @@ const roadRoute = L.polyline(coords, {
       <p><strong>NAT (National Topography) Italia</strong> è uno strumento professionale di visualizzazione, analisi e gestione delle reti nazionali italiane di telecomunicazioni DWDM. Progettato per ingegneri, tecnici e manager che operano nell'ambito delle infrastrutture di rete backbone (RC) e access (RA).</p>
 
       <div class="guide-highlight">
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.17 (08/05/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Percorso stradale su selezione collegamento: alla linea d'aria (solida) si sovrappone il percorso pedonale più breve via OSRM (linea tratteggiata rosso scuro), valido per RC, RA e MERGED — nessun senso unico né divieto considerato<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• La distanza mostrata nel tooltip rimane sempre quella del DB, il percorso OSRM è puramente grafico<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Cache dei percorsi per evitare re-fetch su ri-selezione dello stesso collegamento<br/></p>
         <p><strong>🆕 NOVITÀ VERSIONE Rev22.16 (21/04/2026):</strong><br/>
         ✅ <strong>📏 Strumento di Misura – Distanza Stradale via OSRM:</strong> Lo strumento "📏 Clicca 2 Punti" mostra ora anche la distanza percorso stradale (urbano/extra-urbano) oltre alla classica linea d'aria<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Dopo il secondo click appare un pannello floating draggabile con linea d'aria immediata e "calcolando…" per la stradale<br/>
